@@ -2,8 +2,8 @@
 library(tidyverse)
 library(nnet)
 
-source("~/Dropbox/hill_kreisi/functions/nostrong_model.R")
-source("~/Dropbox/hill_kreisi/functions/seven_question_model.R")
+source("~/Dropbox/ambivalence_everywhere/functions/nostrong_model.R")
+source("~/Dropbox/ambivalence_everywhere/functions/seven_question_model.R")
 library(haven)
 library(gtools)
 

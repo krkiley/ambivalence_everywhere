@@ -241,19 +241,19 @@ tradties_model <- fmm(waves= c("y1", "y2", "y3"), id="id",
                       qtype="5")
 
 #Equal Role/Woman's Place in Home		V923801	V940928	V960543
-df <- anes %>% select(V926117,V941031,V961249, id) %>%
-  mutate(y1 = as.numeric(V926117), y2 = as.numeric(V941031),
-         y3 = as.numeric(V961249)) %>%
-  mutate(y1 = recode(y1, "1"=1, "2"=2, "3"=3, "4"=4, "5"=5,
-                     "8"=3, "9"=NA_real_, "0"=NA_real_),
-         y2 = recode(y2, "1"=1, "2"=2, "3"=3, "4"=4, "5"=5,
-                     "8"=3, "9"=NA_real_, "0"=NA_real_),
-         y3 = recode(y3, "1"=1, "2"=2, "3"=3, "4"=4, "5"=5,
-                     "8"=3, "9"=NA_real_, "0"=NA_real_)) 
+df <- anes %>% select(V923801,V940928,V960543, id) %>%
+  mutate(y1 = as.numeric(V923801), y2 = as.numeric(V940928),
+         y3 = as.numeric(V960543)) %>%
+  mutate(y1 = recode(y1, "1"=1, "2"=2, "3"=3, "4"=4, "5"=5, "6"=6, "7"=7,
+                     "8"=4, "9"=NA_real_, "0"=4),
+         y2 = recode(y2, "1"=1, "2"=2, "3"=3, "4"=4, "5"=5, "6"=6, "7"=7,
+                     "8"=4, "9"=NA_real_, "0"=4),
+         y3 = recode(y3, "1"=1, "2"=2, "3"=3, "4"=4, "5"=5, "6"=6, "7"=7,
+                     "8"=4, "9"=NA_real_, "0"=4)) 
 eqroles_model <- fmm(waves= c("y1", "y2", "y3"), id="id",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="eqroles",
-                      qtype="5")
+                      qtype="7")
 
 #################################################
 ######## HERE 
