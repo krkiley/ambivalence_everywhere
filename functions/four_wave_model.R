@@ -186,13 +186,13 @@ fourWaveFMM <- function(waves, covariates=NA, data, n_chains = 5, iterations = 2
       #Sample parameters from their posterior distribution
       #print("drawing parameters")
       alpha1=rbeta(1, sum(g1)-sum(Ai*g1)+1, sum(Ai*g1)+1)
-      delta1=rbeta(1, (sum(Bi[g1==1])/3)+1, sum(g1)-(sum(Bi[g1==1])/3)+1)
-      two_params=rdirichlet(1, c((sum(Ci[g2==1])/3)+(2/3), (sum(Ri[g2==1])/3)+(2/3),
-                                 sum(g2==1)-(sum(Ci[g2==1])/3)-(sum(Ri[g2==1])/3)+(2/3)))
+      delta1=rbeta(1, (sum(Bi[g1==1])/4)+1, sum(g1)-(sum(Bi[g1==1])/4)+1)
+      two_params=rdirichlet(1, c((sum(Ci[g2==1])/4)+(2/3), (sum(Ri[g2==1])/4)+(2/3),
+                                 sum(g2==1)-(sum(Ci[g2==1])/4)-(sum(Ri[g2==1])/4)+(2/3)))
       phi2=two_params[1]
       alpha2=two_params[2]
-      delta2=rbeta(1,(sum(Bi[g2==1])/3)+(2/3),
-                   sum(g2)-(sum(Ci[g2==1])/3)-(sum(Bi[g2==1])/3)+(2/3))
+      delta2=rbeta(1,(sum(Bi[g2==1])/4)+(2/3),
+                   sum(g2)-(sum(Ci[g2==1])/4)-(sum(Bi[g2==1])/4)+(2/3))
       three_params_1=rdirichlet(1,c(sum(Hi[g3==1&Ei==1])+(2/6),
                                     sum(g3[Ei==1])-sum(Fi[g3==1&Ei==1])-
                                       sum(Hi[g3==1&Ei==1])+(2/6),
@@ -208,8 +208,8 @@ fourWaveFMM <- function(waves, covariates=NA, data, n_chains = 5, iterations = 2
       
       alpha3post=rbeta(1,sum(g3[Hi==1])-sum(Mi[g3==1&Hi==1]) + (2/6),
                        sum(Mi[g3==1&Hi==1]) + (2/6))
-      delta3=rbeta(1,(sum(Bi[g3==1])/3) + (2/3),
-                   sum(g3) - (sum(Ci[g3==1])/3) - (sum(Bi[g3==1])/3) + (2/3))
+      delta3=rbeta(1,(sum(Bi[g3==1])/4) + (2/3),
+                   sum(g3) - (sum(Ci[g3==1])/4) - (sum(Bi[g3==1])/4) + (2/3))
       tau3=rbeta(1,sum(g3[Ei==1]) + 1,sum(g3[Ei==2]) + 1)
       
       #Sample Gamma's from the multinomial regression output

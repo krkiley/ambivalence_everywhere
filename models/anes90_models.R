@@ -1046,6 +1046,8 @@ anes90results <- list(govins_model, jobguar_model, servspend_model, govblks_mode
                       wastetax9_model) #66
 save(anes90results, file = "~/Dropbox/hill_kreisi/results/anes90results.Rdata")
 
+anes90results[[16]] <- eqroles_model
+
 rm(govins_model, jobguar_model, servspend_model, govblks_model, 
    affactanes9_model, eqop_model, toofar_model, 
    nochance_model, morechance_model, worryless_model, treateq_model,
