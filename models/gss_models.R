@@ -1117,9 +1117,9 @@ fehire_model <- fmm(waves= c("y1", "y2", "y3"), id="id_1",
 df <- bind_rows(g6 %>% select(id_1, marhomo_1, marhomo_2, marhomo_3) %>% 
                   mutate(id_1 = paste(id_1, "06", sep = "-")), 
                 g8 %>% select(id_1, marhomo_1, marhomo_2, marhomo_3) %>% 
-                  mutate(id_1 = paste(id_1, "06", sep = "-")), 
+                  mutate(id_1 = paste(id_1, "08", sep = "-")), 
                 g10 %>% select(id_1, marhomo_1, marhomo_2, marhomo_3) %>% 
-                  mutate(id_1 = paste(id_1, "06", sep = "-"))) %>%
+                  mutate(id_1 = paste(id_1, "10", sep = "-"))) %>%
   mutate(y1 = as_factor(marhomo_1), y2 = as_factor(marhomo_2),
          y3 = as_factor(marhomo_3)) %>%
   mutate(y1 = recode(y1, "STRONGLY AGREE"=1, "agree"=2, "NEITHER AGREE NOR DISAGREE"=3,

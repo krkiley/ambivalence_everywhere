@@ -1,0 +1,471 @@
+---
+title: Ambivalence is Everywhere&#58; Quantifying Attitude Stability Across Topic Domains[^thanks]
+author:
+  - Kevin Kiley, Duke University[^kk]
+date: "2/3/2021"
+output: 
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    toc: false
+    number_sections: true
+    extra_dependencies: ["float"]
+bibliography: ["kileybib.bib"]
+header-includes:
+   - \usepackage{setspace}\doublespacing
+   - \setlength{\parindent}{4em}
+mainfont: Minion Pro
+fontsize: 11pt
+abstract: A major debate in the social sciences centers on whether people hold consistent attitudes over time or whether attitudes are temporary constructs. A middle ground suggests that stable opinions are a function of social structure and attention, and on any particular issue, some people hold stable attitudes and others do not. This paper uses a finite mixture model approach to quantify the proportion of people who hold stable attitudes, the proportion of people who make durable changes, and the proportion of people who demonstrate inconsistent or ambivalent responses for more than 500 survey questions across 10 panel data sets. The results suggest wide variation across questions in the proportion of respondents who hold stable attitudes, with most subject areas demonstrating high levels of inconsistency. Stability is also socially patterned, with people demonstrating stability on related issues, suggesting that over-time instability in responses is not measurement error, but that the general public is divided into "issue publics" that have stable opinions on different issues. Rather than argue that people in general hold or lack opinions, the results show that stable opinions are socially contingent.
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(fig.pos = "t", out.extra = "")
+library(tidyverse)
+library(broom)
+library(knitr)
+library(ggbeeswarm)
+library(ggrepel)
+library(igraph)
+source("~/Dropbox/ambivalence_everywhere/functions/model_function.R")
+load("~/Dropbox/hill_kreisi/results/ambivalence_everywhere_results/results_df.Rdata")
+load("~/Dropbox/hill_kreisi/results/ambivalence_everywhere_results/marhomo_model.Rdata")
+qm <- read_csv("~/Dropbox/ambivalence_everywhere/questionmacro.csv")
+```
+
+[^thanks]: Thanks to Stephen Vaisey, Craig Rawlings, and Nicholas Restrepo Ochoa for feedback on early drafts. Thanks to Jennifer Hill for guidance on implementing the model and for providing additional resources. Thanks to Christopher Johnston for originally pointing me to the finite mixture model approach.
+[^kk]: Ph.D. Candidate, Department of Sociology, Duke University, <kevin.kiley@duke.edu>.
+
+# Introduction
+
+What proportion of the population holds stable attitudes? This question has been a key debate in the social sciences since Philip Converse claimed that "large portions of an electorate ... simply do not have meaningful beliefs, even on issues that have formed the basis for intense political controversy among elites for substantial periods of time" [@converse1964]. After decades of research and debate, there is little consensus.
+
+On one hand, researchers point to low wave-to-wave correlations in people's responses to the same question over time, question-order and -wording effects, the effects of psychological primes, the complexity of culture, and the general limitations of human cognition to argue that people do not carry around fixed beliefs [@converse1964; @martin2002; @martin2010; @perrin2011]. Instead, they argue, people are ambivalent on issues of public interest and construct opinions in the interview or survey setting, drawing on recent considerations from their social environment [@zaller1992]. In contrast, other researchers point to the stability of attitudes in the aggregate, both aggregating across questions within people [@ansolabehere2008] and aggregating the same question across a population [@page1992]; the infrequency of durable changes in attitudes over time [@kiley2020]; and the ability of specific attitudes to predict a range of behaviors over time [@vaisey2009] as evidence that people carry at least some stable latent attitudes or dispositions, even if these positions are obscured by measurement error.
+
+Recent work argues that dispositions are mostly stable by the time people reach adulthood [@kiley2020]. But these findings elide the "non-attitudes" debate by grouping together people who hold stable, unchanging opinions with people who change randomly from wave to wave. In other words, while finding that people tend not to make durable changes in their beliefs over time, they cannot say whether this is because people hold real, stable attitudes or whether it is because they hold no attitudes at all. This is, to put it mildly, an important distinction. 
+
+A middle ground -- going back to Philip Converse's development of the "non-attitudes" thesis -- suggests that on any particular issue (and in any particular window of time) the population comprises three groups: people who hold stable opinions they can report consistently, people who hold weak opinions subject to temporary influences, and a small group of people making durable, real change [@freeder2019; @hill2001a; @zaller1992]. In other words, rather than assuming that all members of the population either have or lack opinions, this approach says "some do, and some do not," a position more consistent with advances in psychology distinguishing between "strong" attitudes, which govern behavior and thought, and weak attitudes, which do not [@howe2017]. But for any particular question, these groups will vary in size and composition. There has been little systematic exploration of which issues demonstrate more or less stability or durable change, especially outside of political attitudes. This has hindered the development of systematic perspectives about the degree to which people form opinions and the social conditions under which they do.
+
+This debate about whether people hold stable attitudes has significant implications for the role of attitudes and beliefs in social behavior. If people do not carry around fixed beliefs, and if their dispositions and behavior are swayed by temporary influences, there is substantial room for contemporary social structures, opinion leaders, and momentary situations to shape attitudes, and explanations for attitudes should be rooted in contemporary social structures, as pragmatist theories suggest [@gross2009; @joas1996]. If people hold stable attitudes that are relatively impervious to momentary changes in social influence, these attitudes would be more likely to shape patterns of behavior, affiliation, and belief over time, and explanations for attitudes should be located in people's backgrounds, rather than contemporary social structures. A world where, on any particular issue, some people hold a stable attitude and others do not directs attention to "institutions and contexts and other forms of objectified cultural structure" that facilitate attitude stability [@lizardo2010a: p. 206; @martin2010] and suggests that different attitudes might matter in explaining different peoples' behavior. 
+
+In this paper, I use a finite mixture model approach to estimate for more than 500 attitude questions across 10 panel data sets the proportion of respondents who hold stable opinions, the proportion of respondents who hold vacillating attitudes or no opinion at all, and the proportion of respondents who make durable changes of opinion. These questions include topics addressed by political scientists in the past, as well sociologically relevant questions about religion, gender roles, race relations, morality, institutional and social trust, and more.
+
+I find wide variation in the proportion of people who hold stable opinions, with some attitude questions demonstrating widespread response stability across the population (70 percent of respondents or more) while other questions demonstrate rampant inconsistency, with fewer than 20 percent of respondents able to give a consistent opinion over time. Overall, rates of vacillating change tend to exceed rates of stable attitudes, and high rates of ambivalence are found in attitudes about political issues, religious and moral beliefs, self-assessments, sentiment toward groups, and more. People disproportionately demonstrate stability on related issues (e.g., stability on one political issue predicts stability on other political issues, but not on religious issues), suggesting different forces give rise to stability in different domains. Rather than argue that people in general "have" or "lack" opinions, these results suggest both are generally true for any particular question, and they reinforce the argument that stable opinions are principally a function of attention and social structure. 
+
+# Stable Opinions and Non-Attitudes
+
+Broad streams of social science work generally assume that people have relatively stable attitudes or dispositions, which is why Converse's original "non-attitudes" findings generated such a robust debate. 
+
+The most sustained challenge to the "non-attitudes" model in the social sciences are what are called "measurement-error" models, which posit that all people hold (latent) attitudes but report them with some error [@achen1975; @ansolabehere2008; @inglehart1985]. Error arises for a variety of reasons, but when responses to the same question are aggregated at the population level [@page1992], when responses to related questions are aggregated within people [@ansolabehere2008], or certain statistical methods are employed [@inglehart1985; @judd1980], respondents display much higher levels of stability than when we look at their individual responses over time. Researchers interpret this as evidence of stable "latent" attitudes.
+
+In cultural sociology, this line of thinking takes the form of suggesting that people have implicit dispositions that shape their behavior over time, even if they cannot articulate these commitments in interview contexts [@hitlin2004; @vaisey2009]. Vaisey argues that interviews and surveys tap distinct cognitive processes. Interviews tap discursive reasoning, which tends to bring to the surface the breadth of contradictory considerations that people have internalized. Fixed-choice survey questions tend to invoke practical reasoning, gut feelings about which answer is likely correct, which also tends to control social behavior across situations. In support of his argument, he and others show that responses to survey questions about worldviews and values predict a range of behaviors across contexts [@miles2015; @vaisey2009; @vaisey2010] and that quickly assessed questions about the relationship between cultural concepts is predictive of other beliefs [@hunzaker2019]. 
+
+These works give us an expectation that people should be relatively consistent in their cultural commitments over time, especially in survey responses. When asked to give an opinion about an issue, such as whether they agree or disagree that "Morality is a personal matter and society should not force everyone to follow one standard," people might vacillate within a narrow band. On some days, a moral relativist might agree that morals are a personal matter and some days might strongly agree, but when they look at the "lineup" of options, a person with a disposition that morality is a personal matter is not going to say that society should enforce one standard, and they are not going to say they lack a position. These results will "feel" wrong, even if people are not conscious of why.
+
+At the same time, a key finding of cultural sociology in the last half-century is that rather than internalize a consistent cultural worldview through a single socialization process, people are exposed to and internalize a diverse, contradictory cultural repertoire of beliefs, practices, and assessments [@swidler1986; @dimaggio1997]. A long line of research documents this cultural contradiction across domains. In America, love is both a choice entered into freely and a unique and irreplaceable commitment that people cannot leave [@swidler2001]. Morality is fixed and relative [@baker2004], orthodox and progressive [@hunter2000]. American culture is individualist and collectivist; managerial and therapeutic; biblical and republican [@bellah1985]. 
+
+It is not just that culture is diverse and contradictory at the public level -- that concepts compete in the public domain but people maintain distinct worldviews -- but this contradiction is also apparent in personal culture, the declarative and non-declarative attitudes, worldviews, values, and dispositions that manifest at the individual level [@lizardo2017]. Because of their cognitive limitations, people consume a broad array of cultural information and can not or tend not to engage in the effort to reconcile these cultural contradictions [@martin2010; @zaller1992]. As a result, "our heads are full of images, opinions, and information, untagged as to truth value, to which we are inclined to attribute accuracy and plausibility" [@dimaggio1997: p. 267].
+
+Because they have contradictory commitments in their brains, people seem to struggle to maintain their a single line of cultural reasoning over time [@swidler1986]. In successive interviews (and often in the same interview) people can demonstrate very different opinions on the same issue without recognizing these contradictions [@swidler2001]. People draw on different cultural resources to justify institutionally constrained behavior [@mills1940; @scott1968]. And when we look at people's responses to the same attitude question over time, they often demonstrate high levels of inconsistency [@alwin2007; @converse1964; @hout2016].
+
+This work in cultural sociology echoes a line of public opinion scholarship. In his Receive-Accept-Sample model, Zaller [-@zaller1992; @zaller1992a] argues that the population is characterized by ambivalence toward political issues and tend to be uncritical toward the messages they receive. As a result, they store arguments for "more government spending is good" and "higher taxes are bad" when they hear these messages, and, as Zaller notes, "most of the time, there is no need to reconcile or even recognize their contradictory reactions to events and issues. Each can represent a genuine feeling, capable of coexisting with opposing feelings and, depending on momentary salience in the person's mind, controlling responses to survey questions" [@zaller1992: p. 93]. When people are called to account for these beliefs, they conjure up some or all of these considerations and construct an answer. Because considerations are called up in a haphazard way, which manifest at any particular interview can vary, and people's assessments can be influenced by question wording, question order, psychological primes, and changes in their information environment, such as what was on the news recently.
+
+While Converse's original "non-attitudes" argument suggested that people lacked attitudes entirely, in neither the RAS model nor the cultural sociology model do authors suggest that people lack considerations. Rather, both models argue that people have internalized heterogeneous considerations that make them express differing, often strongly felt, opinions over time. Similarly, neither model prohibits people from holding strong contradictory beliefs -- support for more government spending, lower taxes, and a balanced budget, for example -- that they can present consistently over time. But these models suggest that on questions that call forth these conflicts, people will give inconsistent responses as some considerations are pushed to the foreground each time. 
+
+These research threads suggest that we should expect people to be inconsistent in their cultural or political beliefs when measured over time. On the morality question raised earlier, this framework expects that people will sometimes they might say they lack any opinion at all. Other times, perhaps because they recently heard a compelling argument in favor of moral absolutism, they might say they disagree. Still other times, maybe after hearing a counter argument, they say might say they agree. Regardless of what they say in the survey, they are unlikely to carry this disposition to a new setting or use it in shaping their behavior.  
+
+## Some Do, Some Do Not
+
+The debate about the stability of attitudes persists because at different times and in different contexts, both seem to be true. People sometimes behave as if they have clear, consistent political or cultural beliefs, and at other times appear to behave as if they do not. And this suggests a path forward.
+
+Philip Converse's seminal work [-@converse1964; @converse1979] on attitude inconsistency is frequently invoked by other researchers to suggest that the American public lacks opinions on political matters, but his "black and white" model got its name by suggesting that on any particular issue, the population could be divided into "a 'hard core' of opinion on a given issue, which is well crystallized and perfectly stable over time" and a group of people whose responses are "statistically random" [@converse1964: p. 242]. On any particular issue, some people held opinions and others did not. The population did not consist of ideologically distinct camps, but "issue publics" that care about different issues. Converse's model has received support over time and across data sets [@converse1979; @taylor1983; @hill2001a].
+
+Psychological research also distinguishes between strong attitudes, which are "resistant to change, stable over time, influential on cognition, and influential on action" [@howe2017: p. 329] and weak attitudes, which are not. This research suggests that attitude strength is a multi-dimensional concept with diverse antecedents, and that people vary widely in the strength they attach to any particular attitude.
+
+These contrast with the measurement error model, which relies on an assumption that errors are a function of the question being asked, not the people answering questions, meaning no individual characteristics should predict instability. While initial assessments argued that nothing predicted stability [@achen1975; @erikson1979], research since finds that individual characteristics are strongly predictive of stability in political views. Zaller [-@zaller1992] shows that people who have higher political awareness -- as measured by factual information about the political space -- tend to hold more stable political attitudes. Freeder and colleagues [-@freeder2019] find that knowledge of where political parties fall on a different issue is associated with stability over time. These findings suggest, in general, that some people are better at articulating consistent political opinions than others. 
+
+The theoretical underpinnings of Converse and Zaller's models are in no way confined to political beliefs, and there is no reason to assume that a model in which some people hold stable opinions while others express ambivalence in the form of vacillating attitudes does not describe the behavior of a broad range of beliefs.  
+
+A "some do, some do not" of attitude consistency can address theoretical problems with "latent beliefs," specifically an unclear articulation of what latent beliefs are. If latent beliefs are people's theoretical preferences -- preferences for tradition over modernity; government restraint over government intervention; conservative or liberal -- that people have a hard time connecting to concrete positions or debates, then people should be more consistent in articulating these theoretical positions than concrete ones. But Ansolabehere and colleagues [@ansolabehere2008] find that even when aggregated, these kinds of general attitudes are less consistent than more specific beliefs regarding policy positions. A world where people have a difficult time connecting their general dispositions to specific policies but have a harder time answering questions that explicitly inquire about those general dispositions is hard to square. 
+
+Other researchers posit that latent beliefs are "gut feelings" that take "a good deal of effort" to "put into words" [@inglehart1985: p. 101]. But, given what we know about different methods call forth different forms of culture, we should expect people to be better able to articulate their gut feeling in a forced-choice survey than in any other context, assuming a good enough answer is present in the lineup [@vaisey2009]. If latent beliefs are complicated preferences that are difficult to articulate in any setting, then they are unlikely to control behavior across domains, and we should question whether they are meaningful at all. While there are undoubtedly non-declarative forms of culture that motivate behavior over time but would be difficult to capture in a survey [@lizardo2017], there is no reason to expect that aggregating more questions would capture these aspects of culture better, given their absence of symbolic content. 
+
+A "some do, some do not" model does not need the concept of latent beliefs to explain the fact that attitudes demonstrate low constraint [@converse1964; @boutyline2017a] but are relatively stable in the aggregate [@ansolabehere2008]. Psychological research demonstrates that when people decide that an issue is important to them, they become more stable on that attitude and seek out other attitudes to reinforce it [@howe2017]. For example, a person who opposes abortion might recognize that they should also oppose government intervention in the economy because they see other people, particularly thought leaders, holding those two attitudes simultaneously [@goldberg2018]. But the extent to which they attach various attitudes, and which attitudes they attach, are going to vary from person to person, shaped by time, attention, and social networks. This will result in what Converse [-@converse1964] called "issue publics" -- socially patterned groups of people who are stable on different but overlapping sets of issues. When more attitudes get aggregated, more of these "issue publics" get folded into the average, giving the scale greater consistency as inconsistent (weak) beliefs cancel out.
+
+A "some do, some do not" model of attitude stability, applied to attitudes more broadly, can also account for the fact that cultural attitudes can be predictive of behavior but often not as strongly as theories suggest. Researchers have invoked this weak predictive power of cultural attitudes to argue both for and against a link between attitudes and behaviors [@jerolmack2014; @vaisey2014]. A "some do, some do not" model suggests that we should not expect every person to have a position on abortion or a cultural worldview that motivates their behavior. Instead, the people who deem these beliefs to be important are more likely to have them shape their behavior, and are similarly more likely to report them stably over time [@howe2017].
+
+Finally, a "some do, some do not" model more closely aligns with work in cultural sociology suggesting that social structures -- institutions, contexts, and public culture -- are principally responsible for shaping attitude structure and constraint [@lizardo2010a; @martin2002; @martin2010; @rawlings2020]. Martin [-@martin2002], drawing on Durkheim's formulation of "social facts" [-@durkheim1895], argues that consistent patterns of thought require external social supports. If social reinforcement and scaffolding through public culture is a necessary condition for holding consistent beliefs, then we would not expect everybody to be equally exposed to these processes. Some people are going to be in environments where they hear contradictory messages and considerations, while other people are in environments where they hear a single line of reasoning that makes holding beliefs relatively easy [@zaller1992].
+
+## Expectations
+
+The preceding discussion suggests that assuming people in general either have or lack attitudes is a false dichotomy, rooted in a outdated understanding of attitudes. We should expect that on any particular issue that is measured in a survey, some people will hold strong, stable attitudes, while other people will have weak, ambivalent attitudes. Importantly, the distinction between these opinion behaviors might only be apparent when we look at attitudes over time, as weak attitudes make themselves apparent through their inconsistency.
+
+Other general expectations follow. First, most issues should demonstrate higher proportions of weak, vacillating attitudes than strong, stable attitudes. Survey questions tend to reflect issues about which there is public disagreement, meaning people will consume heterogeneous arguments about the issue.[^granted] Because screening out competing considerations takes cognitive work, time, and attention, which are limited resources, people are only likely to be stable on some issues while displaying ambivalence toward others.  
+
+[^granted]: While there are likely issues that all people are stable on because they are taken-for-granted assumptions about the social world, for that same reason they are unlikely to be asked. Similar, there might be issues so far outside the domain of public discussion such that nobody holds strong stable beliefs, but these are also not likely asked. 
+
+Second, consistent with the issue publics model that roots stability in institutions and external scaffolding, people should demonstrate stability on related issues. For example, we should expect people who have stable attitudes on one question of general morality to have stable opinions on other questions of general morality, fostered through reflection on this topic, but this person might not have stable opinions on politics, religion, or even questions of specific moral prohibitions. Stable opinions on one political issue (opposition to abortion) might span to general political ideology (conservatism), but not necessarily to other political issues (opposition to government spending) [@baldassarri2008].
+
+Finally, we should expect very few examples of people durably changing opinions, even as we see high rates of change in the population. Previous work suggests that people tend to form dispositions early in life and carry them with them over time, rather than update attitudes over time [@kiley2020; @vaisey2016]. As Howe and Krosnick note, "Attitudes that can be easily changed are weak and unlikely to shape behavior. The attitudes that most powerfully shape behavior are the hardest to change" [-@howe2017: p. 328]. 
+
+# Measuring Opinion Behaviors
+
+The proceeding discussion suggests that the population comprises three groups of people with distinct attitude behaviors: some will behave as if they have settled (strong) attitudes, another will behave as if they construct (weak) opinions anew in each survey wave; and a third comprises people who change their attitudes over time or ambivalent people who become strong attitude holders in the survey window. 
+
+Most methods for measuring opinion behavior tend to conflate two of these groups or avoid quantifying their prevalence at all. Kiley and Vaisey's [-@kiley2020] methods compare the relative prevalence of vacillating changers and durable changers without quantifying the proportion that falls into these groups or the proportion giving stable responses. Focusing on how many people change their responses over time, the average level of change in responses [@freeder2019], or how many people remain stable over time, especially across only two waves, conflates people who make durable change with people who vacillate.
+
+Other methods, especially those focused on measuring correlations over time [@alwin2007; @hout2016], treat questions as reflecting a continuous scale, rather than respecting the nominal structure of response options as they are presented to the survey participant. For example, many methods treat a change on a five-point scale from "no opinion" to "disagree" the same as a change from "strongly agree" to "agree," even though the former represents a qualitative shift in belief while the latter represents a shift in degree. These methods also assume that a real position exists underneath measurement error [@achen1975; @ansolabehere2008], which may not be a valid assumption.
+
+Finally, latent class methods can be used to deductively group cases such that their manifest variables are statistically independent [@bonikowski2016]. Using such a method, we might be able to quantify how many people consistently give "agree" responses, "disagree" responses, and responses that change from one side to the other [similar to @taylor1983]. However, the theoretical model outlined above suggests more complex relationship among successive opinions than the conditional independence standard can capture.
+
+An ideal model would formally specify the three different opinion behavior groups and quantify the probability that a respondent's set of responses came from each of these theoretical models. An ideal model should respect the nominal structure of the data -- especially the unique nature of "no opinion" and other ambivalent response categories. And it should allow for a comparison with the measurement error model. 
+
+Hill and Kreisi outline a finite mixture model congruent with the above example that they use to estimate the prevalence of these three kinds of response behavior to questions about pollution-abatement policies in a sample of Swiss residents [@hill2001a; @hill2001b; @hill2001].[^fourwave] With a finite mixture model, I can formalize three distinct theoretical processes that might have generated the observed data and estimate the probability that each one did. I outline that model below.
+
+## Behavioral Groups
+
+How do we formalize these behaviors? Consider the question from the General Social Survey's three-wave panels: "Do you agree or disagree with the following statement: Homosexual couples should have the right to marry one another." Respondents are given five options to select from: "strongly agree", "agree", "neither agree nor disagree", "disagree", "strongly disagree." Survey respondents answered this question three times over four years.
+
+A starting assumption is that people exhibit one of these opinion behaviors over the course of the survey window. While a person might be stable during the survey and make durable change at another point in time, in the survey window he can only exhibit one pattern. Let $\pi_j, j = 1, 2, 3$ represent the marginal probability of belonging to each group, with 1 indicating Opinion Holders, 2 indicating Vacillating Changers, and 3 indicating Durable Changers. These behaviors are defined below:
+
+**Opinion Holders:** Whether because they have strong dispositions about an issue or because they are embedded in social structures that facilitate a single line of response over time, the first behavior group, "Opinion Holders," should report being on the same side of an issue over time. With regard to the question above, a person might "strongly agree" in all three waves, or switch between "agree" and "strongly agree" based on recent considerations. But barring actual error in coding the response, it would be unreasonable to assume a person who supports gay marriage would declare that they oppose it in a survey because of measurement error.[^error] Similarly, we would not expect a person who actually holds an opinion on this issue to say they "neither agree nor disagree" with the question.[^ambivalence]
+
+[^error]: Ansolabehere and colleagues attribute measurement error to "vague question wordings, vague response categories or categories that do not reflect the individual’s actual attitude, inattentiveness on the part of the respondent, and even typographical errors" [@ansolabehere2008: 216]. While it is easy to accept that a person who supports gay marriage might vacillate between "agree" and "strongly agree" in response to this question, it is harder to imagine that a person who supports gay marriage gives a response that indicates the opposite. There will likely be cases of error where the response is coded incorrectly, but it is hard to believe they will produce the level of vacillation we see in some questions.
+
+[^ambivalence]: It is debatable whether the response "neither agree nor disagree" represents ambivalence and the lack of clear opinion, as I assume here, or whether it represents a nuanced position, such as one where a person thinks that homosexuals should have the right to marry in some circumstances and not others. If it is the latter, then we would expect people to maintain this position over time. However, of the 301 people in the GSS panel who report this position in wave 1 and respond in each wave, only 31 maintain this position across all three waves. Results below further argue against this position.
+
+If all people in the population behaved according to this model, we could easily model their responses over time with only two or three parameters. First, we would need to know what proportion of people agreed ($\alpha_1$) or disagreed ($1-\alpha_1$) with a statement, a fixed parameter for each person, and then, in a particular wave, draw whether they give a strong ($\delta_1$) or weak response.[^strength] Theoretically, $\alpha_1$ would represent the balance of forces in society that create stable opinions in favor of an issue, such as socializing institutions.
+
+[^strength]: The model makes the simplifying assumption that people expressing opinions are equally likely (within opinion behavior groups) to give them strongly. This assumption can be relaxed.
+
+**Vacillating Changers:** The second theoretical model of opinion formation suggests a very different attitude-formation process in which opinions are constructed anew in each wave on the basis of stored considerations and local influences. As noted above, several theories posit that people indiscriminately consume information and construct opinions by drawing on these considerations in the survey or interview setting -- what Zaller [-@zaller1992] calls "ambivalence" [see also @hochschild1981]. These people have likely heard some arguments in favor of homosexual marriage and some arguments against it, but have not taken much time to reconcile them. In the survey interview, they are asked to give an opinion and, upon reflection, call forth some of these considerations, which might be influenced by a variety of factors, such as recent discussions. The key here is that influences on responses are local, rather than reflecting general debate. This assumption reflects the idea that people in this group are somewhat removed from public debates on the issue and therefore should not be swayed by changes of elite opinion. 
+
+While functionally different from opinion holders, these peoples' responses could also be summarized by a few parameters. We would only need to know the probability that a person gives a "no opinion" response ($\varphi_2$), the probability that, if they give an opinion it is some version of "agree" ($\alpha_2$), and the probability that if they give an opinion they give it strongly ($\delta_2$). In this model, these parameters reflect the distribution of considerations in society that people can draw on to give responses, including the social factors that might make admitting to no opinion acceptable. Because their opinions are statistically independent across waves, each person's response in each wave would be a multinomial draw of the five response options ("strongly agree", "agree", "neither agree nor disagree", "disagree", "strongly disagree") defined by those three parameters.
+
+Because responses are independent across time, any response pattern is, in theory, compatible with a model in which people generate opinions anew in each wave.
+
+**Durable Changers:** The final group, which I call "Durable Changers," comprise two sets of behaviors. The first are people who truly hold opinions but go from one side of the issue to the other over the course of the survey -- saying "disagree" or "strongly disagree" in wave 1 or waves 1 and 2 but "agree" or "strongly agree" for the remainder.[^durable] People in this group might be reacting to the Democratic party's evolution on gay marriage or have a close family member of friend come out as gay, leading this person to truly change their mind on the topic. Second, some people might lack an opinion on the issue and say "neither agree not disagree" in the first wave, and, upon being asked to consider the question, develop an opinion for the next wave (what is commonly called "panel conditioning" [@oh2019, @halpernmanners2012]). 
+
+[^durable]: It is plausible that in a long enough survey interval, a person might truly change their opinion twice. The surveys explored here tend to look at intervals of about four years, reducing my concern for this possibility. A change that reverts in two years does not seem very "durable," and seems to reflect more local influences than real change. 
+
+The defining feature of this group is that they change opinions once, so response patterns that switch twice or do not switch at all would be incompatible with this model. Because this group is defined by their switching behavior, parameters to summarize their behavior would revolve where they start in their responses and where they end, as well as when during the survey they change their attitude, which might also influence who changes their mind and how. The first parameter that describes their behavior, $\tau_3$, captures the probability of change after the first wave (instead of the second wave). The second and third parameters, $\varphi_3^{(Pre1)}$ and $\varphi_3^{(Pre2)}$, quantify the probability that an opinion changer starts by saying they lack an opinion and changes after the first and second waves, respectively. A fourth parameter, $\alpha_3^{(post)}$ defines the probability that these people change to agreeing with the statement. Two more parameters, $\alpha_3^{(Pre1)}$ and $\alpha_3^{(Pre2)}$, define the probability that someone who changes from one side of the scale to the other starts by agreeing with the statement. Finally, a single parameter, $\delta_3$, quantifies the probability that if a person gives an opinion, they do so strongly. 
+
+## Mixture Model
+
+The fundamental challenge of quantifying response patterns into these groups is that these group labels are unobserved. If we knew which group each person was in, we could count the number of opinion holders who say they agree with a statement to get an estimate of $\alpha_1$. Conversely, if these parameters were known, we would have a simple time calculating which theoretical process was most likely to generate each response. However, while some patterns could only be generated by one of the models (e.g., "agree"-"disagree"-"agree" could only be generated by a vacillating changer), most could be generated by the vacillating changer group and one of the other groups, especially in a three-wave context.
+
+What we can do is estimate a range of plausible values of these parameters ($\pi_1$, $\pi_2$, $\pi_3$, $\alpha_1$, ..., $\tau_3$) that are compatible with the data we observe and the assumptions made above about these three groups. To do this, I use a Bayesian estimation technique known as the Data Augmentation algorithm. The algorithm has two basic steps. First, it samples the "missing data" -- group membership -- given a set of randomly drawn parameters.[^start] In other words, it asks "given this person's responses, how common each group is, and how often members of each group give certain response patterns, how likely is it that this pattern came from group 1, group 2, and group 3?" It then samples from those three probabilities and assigns a group membership to that person. Then it uses these group memberships to estimate the parameters, asking, for example, "given that these people are in group 1, what's the probability of someone in group 1 saying they strongly agree or strongly disagree ($\delta_1$)?" The model draws a plausible value for each parameter from a specified posterior distribution. 
+
+[^start]: At the first iteration, random values are drawn from the parameter space. These values have minimal, logical constraints (for example, the proportion of people in each behavioral group must sum to 1). To ensure that these starting draws do not unduly influence results, I wait for multiple chains with different starting values to converge to the same distribution before summarizing the distribution. 
+
+Posterior distributions combine the distribution of the data given the unknown parameter values with a prior distribution of the parameters, which quantifies belief about the parameters before seeing any data. I use minimally informative priors outlined in Hill and Kreisi [-@hill2001b], the equivalent of adding two additional people to each opinion behavior group and splitting them up among behaviors within these groups.[^priors] The non-informative priors have the effect of generating slightly conservative parameter estimates in each iteration. This effect is most clearly illustrated with the durable changer group. Even in iterations where nobody in the sample is assigned to the "durable change" group, which happens quite often, the model still assumes two people display this behavior, inflating the proportion estimates away from 0. 
+
+[^priors]: Hill and Kreisi test a range of non-informative priors -- between one and six additional people per behavioral group -- and find little sensitivity to different non-informative priors.
+
+The process -- assign groups based on parameters and estimate parameters based on group assignments -- iterates until it converges on a stationary distribution that summarizes plausible values of the parameters given the observed data and the model assumptions. Over these iterations, ambiguous patterns will be alternately assigned to different behavioral groups, producing the range of plausible values. I can then draw values from this distribution to summarize it. In practice, this range of plausible parameters is quite small.
+
+A challenge in using panel data is that people drop out of the sample or refuse to answer questions, leaving missing data. In the analyses presented here, I assume that data is Missing at Random, meaning that once I condition on a person's observed responses, response rates are random. Hill [-@hill2001] finds that the distribution of parameter estimates is similar under a variety of assumptions, with the proportion of vacillating changers slightly higher under less restrictive assumptions than the one made here. Accommodating this assumption adds an additional step to each iteration: filling in missing data on the basis of group assignment and the parameter estimates. For example, if a person is assigned to the "stable opinion" group and expresses either agree or strongly agree in their non-missing waves, their missing response is filled in from a draw of "strongly agree" and "agree" with probabilities $\delta_1$ and $1-\delta_1$. 
+
+The model iterates through these three steps -- assign group membership on the basis of responses and estimated parameters; estimate parameters on the basis of group membership and responses; and fill in missing data on the basis of parameters, group membership, and observed data -- until iterations reach a stable posterior distribution. Full details of the estimation procedure are outlined in a supplemental appendix.
+
+## Gay Marriage Example
+
+To demonstrate the model and the interpretation of its estimates, I apply it to the gay marriage question described above. This question has several features that make it a good illustration. Its structure is similar to the questions that Hill and Kreisi developed the model with: a five-point Likert scale with a midpoint that can be thought of as "no opinion" or ambivalence. Prior to and during this period, gay marriage attained a high profile in national political debates, which should ensure that some proportion of the sample had clear opinions. There were also changes in elite opinion on the issue during the window studied. As a result, I expect that some members of the sample will demonstrate durable change.
+
+Table \@ref(tab:gaymarriage) summarizes the posterior distribution of the gay marriage example, with the mean of the posterior distribution for each parameter indicated by a circle and error bars indicating an interval representing the central 95 percent of values most compatible with the data and the model assumptions. 
+
+\begin{table}[!htbp] \centering
+  \caption{Finite Mixture Model parameter estimates for gay marriage question (2006-14 GSS).}
+  \label{tab:gaymarriage}
+\begin{tabular}{@{}l l l l@{}}
+\hline
+Group & Parameter & Mean & Interval \\
+\hline
+Behavioral Groups & $\pi_1$ & 0.51 & (0.49, 0.53)\\
+ & $\pi_2$ & 0.44 & (0.42, 0.47)\\
+ & $\pi_3$ & 0.05 & (0.03, 0.06)\\
+Opinion Holders & $\alpha_1$ & 0.40 & (0.37, 0.42)\\
+ & $\delta_1$ & 0.73 & (0.71, 0.76)\\
+Vacillating Changers & $\alpha_2$ & 0.44 & (0.41, 0.47)\\
+ & $\delta_2$ & 0.25 & (0.22, 0.28)\\
+ & $\varphi_2$ & 0.26 & (0.23, 0.28)\\
+Durable Changers & $\alpha_3^{(post)}$ & 0.40 & (0.19, 0.6)\\
+ & $\alpha_3^{(pre1)}$ & 0.33 & (0.2, 0.46)\\
+ & $\alpha_3^{(pre2)}$ & 0.09 & (0, 0.28)\\
+ & $\delta_3$ & 0.68 & (0.54, 0.82)\\
+ & $\varphi_3^{(pre1)}$ & 0.57 & (0.43, 0.71)\\
+ & $\varphi_3^{(pre2)}$ & 0.35 & (0.02, 0.6)\\
+ & $\tau_3$ & 0.68 & (0.56, 0.81)\\
+\hline
+\end{tabular}
+\end{table} 
+
+```{r gaymarriage, fig.cap='Parameter estimates of Fininte Mixture Model for Gay Marriage question in 2006-14 GSS panels, mean and 95 percent plausibility values of posterior distribution. Posterior distribution estimated with 5 chains, 2500 iterations each, first 500 iterations of each chain discarded. "N.O." inficates "No opinion/Neither agree not disagree" response. "Chg." indicates "change".', fig.align='center', fig.height=6, eval = FALSE}
+load("~/Dropbox/hill_kreisi/results/ambivalence_everywhere_results/marhomo_model.Rdata")
+
+knitr::kable(marhomo_model$pattern_param_summary %>%
+    filter(param %!in% c("llike", "chain", "sd_g1", "sd_g2", "sd_g3")) %>%
+  mutate(interval = paste("(", round(q25, 2), ", ", round(q975, 2), ")", sep = ""),
+         mean = round(mean, 2)) %>%
+  select(-c(q25, q975)) %>%
+  mutate(grp = ifelse(param %in% c("pi1", "pi2", "pi3"), "Behavioral Group",
+                        ifelse(param %in% c("alpha1", "delta1", "gamma1"), "G1: Opinion Holder",
+                               ifelse(param %in% c("alpha2", "delta2", "phi2", "gamma2"), "G2: Vacillating Changer",
+                                      "G3: Durable Changer")))) %>%
+  select(grp, param, mean, interval) %>%
+  arrange(grp), "latex")
+
+%>%
+     %>%
+  mutate(param = recode(param, "pi1"="Pr(Opinion Holder)", "pi2"="Pr(Vacillating Changer)", 
+                        "pi3"="Pr(Durable Changer)", "alpha1"="Pr(Agree)", "delta1"="Pr(Strong|Opinion)",
+                        "phi2"="Pr(N.O.)", "alpha2"="Pr(Agree)", "delta2"="Pr(Strong|Opinion)",
+                        "tau3"="Pr(Chg. w1-w2)", "delta3"="Pr(Strong|Opinion)",
+                        "phi3pre1"="Pr(w1=N.O., Chg. w1-w2)", "phi3pre2"="Pr(w1=N.O., Chg. w2-w3)",
+                        "alpha3pre1"="Pr(w1=Agree, Chg. w1-w2)", "alpha3pre2"="Pr(w1=Agree, Chg. w2-w3)",
+                        "alpha3post"="Pr(Agree|w1=N.O.)")) %>%
+    ggplot(aes(x = param, y = mean)) + 
+  geom_hline(yintercept = c(0,1), color = "black") +
+    geom_linerange(aes(ymin = q25, ymax = q975)) + 
+    geom_point(shape = 21, fill = "gray") + 
+    coord_flip() + 
+    theme_bw() + 
+    expand_limits(y=c(0,1)) +
+    facet_grid(grp ~ ., scales = "free_y") +
+    labs(x="", y = "Coefficient estimates (95%CI)") +
+  theme(strip.text = element_text(size = 8),
+        axis.text=element_text(size=8)) 
+
+```
+
+The model estimates that between 49 and 53 percent of the sample gave stable responses ($\pi_1$) to this question over three years, either agreeing ($\alpha_1 = .40$) or disagreeing with the question in all waves, while between 42 and 47 percent of the sample gave vacillating responses ($\pi_2$). Between 3.28 and 6.45 percent of the sample made durable changes in attitudes during the survey window of 2006-14 ($\pi_3$). 
+
+Is about half the population holding a stable view on the gay marriage issue a surprising number? It is higher than the 20 percent of people Converse suggested had stable opinions on the issue of government control of utilities [@converse1964], and it is comparable to what Hill and Kreisi found when they explored opinions on pollution-abatement policies [@hill2001a]. That being said, it was a dominant political issue of the time, and the fact that more than four in ten people lacked durable opinions is notable.
+
+Other estimates in Table \@ref(tab:gaymarriage) are consistent with our intuitions about attitude change and stability. People who hold stable attitudes are more likely to report "strong" attitudes than people who hold vacillating attitudes [@howe2017]. Nothing in the model requires this; it is simply a function of people who do not give strong responses changing between sides of the scale in successive waves. Vacillating changers said "neither agree nor disagree" about a quarter of the time, and when they gave an opinion they were about evenly split between agree and disagree ($\alpha_2 = .44$). 
+
+Consistent with the historical record, the group of people who made durable change tended to change from opposing gay marriage to supporting it ($\alpha_3^{(pre1)} = 0.318$ and $\alpha_3^{(pre2)} = 0.081$). They were also more likely to change between the first and second wave ($\tau_3 = .68$) than between the second and third wave, consistent with theories of panel updating.[^years] Durable changers more closely resemble opinion holders than vacillating changers in their opinion strength, though there is more uncertainty in parameter estimates for the durable change group, since the group is smaller. 
+
+[^years]: The full panel collapses three three-wave panels, so wave 1 actually represents three two-year periods (2006-08, 2008-10, and 2010-12). This makes it difficult to draw conclusions about timing of change, though analyzing the panels separately can provide clarification.
+
+To this point, the model has done nothing to rule out the measurement error model, which suggests that the population comprises one group with different latent positions, responding with errors that are normally distributed. The model presented above could just be partitioning people based on their position in the scale. If this were the case, however, we would expect people in each group to demonstrate similar levels of within-person change over time. People in the stable opinion group would have a latent position near the ends of the spectrum (bouncing between 1 and 2 or 4 and 5), while vacillating changers and durable changers would have latent positions in the middle of the distribution (bouncing between 2 and 3 or 3 and 4), and all groups would respond with similar average errors. While people with extremely large variation would have to be in the vacillating changer or durable changer group, they should be relatively rare so that, on average, the groups are more or less comparable. 
+
+To compare the three-group model to the measurement error model, Hill and Kreisi [-@hill2001a] estimate the average within-person standard deviation for each behavioral groups at each iteration. Table 2 shows the average within-person standard deviation for the three groups. 
+
+| Behavioral Group     | $\sigma$ (95% C.I.)  |
+|:---	                 |:---:                 |
+| Opinion Holder       | 0.303 (0.295, 0.312) |
+| Vacillating Changer  | 0.909 (0.885, 0.932) |
+| Durable Changer      | 1.469 (1.308, 1.631) |
+Table 2: Average within-group standard deviation, by opinion behavior group.
+
+```{r, include = FALSE}
+marhomo_model$pattern_param_summary %>%
+  filter(param %in% c("sd_g1", "sd_g2", "sd_g3"))
+```
+
+Table 2 shows that the average within-person standard deviations are different across groups. Opinion holders have a small average standard deviation ($sd_{G1} = .303$). Vacillating changers have average within-person standard deviations about three times as large as opinion holders ($sd_{G1} = .909$), and durable changers have an average standard deviation larger still ($sd_{G1} = 1.469$). 
+
+In other words, vacillating changers and opinion holders do not simply reflect similar behavior at different points in the scale. Vacillating changers demonstrate much more wave-to-wave change than opinion holders, choosing strong responses more often than we would anticipate if they had similar error ranges to opinion holders but had an average near the scale midpoint. Durable changers appear to swing from one end of the scale to the other, rather than give responses near the middle of the scale. As Hill and Kreisi note in their examination of the Swiss pollution-abatement data, "Given the implausibility of assuming vastly different measurement errors for different people, it seems rather more likely that this variation is composed of both measurement error and true opinion instability" [-@hill2001a: p. 408]. 
+
+# Full Data
+
+The above example demonstrates the model's ability to separate out three distinct sets of opinion behavior, and it provides a baseline for what we might expect for rates of stability, vacillation, and durable change. I now turn toward examining a wider range of attitudes across several panel data sets.
+
+A key challenge in the study of attitudes and opinions is that while it is possible to take a random sample of respondents to generalize to a population of people, it is unclear how to randomly sample to draw inferences to a larger population of attitudes. In the absence of a random sample, many studies explore one or a few attitudes and assume that other attitudes behave similarly. I cast a wide net to capture as broad a range of attitudes and beliefs as possible. It is important to keep in mind that these attitudes do not represent a random sample, so statistical tools to draw inferences from this sample will likely be misleading.
+
+The method outlined above requires at least three waves of responses by the same person to the same question. I focus on questions that ask respondents to give a statement of opinion or judgment on an issue. These questions are often structured as five-point Likert scales, which is the structure Hill and Kreisi designed the model to address. However, to apply this approach to a wider range of questions I make a handful of modifications to the model and the questions being examined.
+
+Many questions lack a clear "no opinion" midpoint. However, interviewers tend to record a volunteered "no response" option. Assuming in the absence of a "no opinion" option people to select a second-best option or volunteer "no opinion," the effect would be a decreased value of the $\varphi$ parameter, but it should not affect the distribution of the behavioral group parameters. Some questions with midpoints are not labeled "no opinion", but rather some other phrase. In cases where the language or substantive interpretation of this midpoint option is equivalent to "no opinion" or ambivalence, I employ the model as it is outlined above. In cases where the midpoint has a substantive interpretation other than "no opinion," I collapse the response into a binary response structure, which I discuss below.
+
+To accommodate two- or three-point scales -- "agree"/"disagree" or "yes/no," often with a "no opinion" or "neither agree nor disagree" option -- I remove the $\delta$ parameters from the model. The lack of "strong" response options has the consequence of greater uncertainty about whether a particular response pattern falls into one behavioral group or another, and the within-group standard deviation comparison is not possible with these questions as opinion holders will always have no within-person standard deviation. 
+
+Similarly, I adapt the model to handle seven-point scales by adding an additional parameter ($\gamma_j$) to account for "weakly" agree and "weakly" disagree or comparable points (response 3 and response 5 on a seven-point scale). For most questions, I maintain the assumption that the midpoint of these scales reflects a lack of opinion rather than a substantive "moderate" position. This might be a better assumption for some questions than others. However, if people hold substantive "moderate" positions, it will show up as lower average within-person variance for these questions.[^moderate] Some questions have much larger scale ranges, including 10-, 12-, or 100-point feeling thermometers. When these questions have symmetrical structures, I collapse them questions into five-point scales.[^thermometers] 
+
+[^moderate]: Kinder and Kalmoe [-@kinder2017] suggest that on seven-point political ideology scales, moderates are "indistinguishable from those who remove themselves from ideological analysis" (p. 160) and that we should regard these people as people who lack opinions, not people who hold sophisticated positions in the middle of the distribution. This strengthens my confidence on using the midpoint as a non-attitude point, rather than a moderation position.
+
+[^thermometers]: On 100-point scales, respondents less than or equal to 20 and 80 as giving considered to give "strong" responses, and individuals at 50 are considered to give ambivalent responses.
+
+Finally, I modify some questions to conform to the model by changing non-symmetrical scales to a binary structures. For example, the General Social Survey includes a question about people's interpretation of the Bible: "Which of these statements comes closest to describing your feelings about the Bible? a. The Bible is the actual word of God and is to be taken literally, word for word. b. The Bible is the inspired word of God but not everything in it should be taken literally, word for word. c. The Bible is an ancient book of fables, legends, history, and moral precepts recorded by men." I collapse this into whether a person chooses Biblical literalism (choice a) or not. In this way, it conforms to the binary model (without a delta parameter in any group). This approach sacrifices nuance (people who believe the Bible is inspired by God and those who believe it is a book of fables are considered the same, and changes between these beliefs do not count for anything) for direct comparability with other questions. In these cases, I try to focus on the most substantive division in the structure. 
+
+A search of multiple panel data sets produced 544 questions for analysis. For this analysis I use data from the General Social Survey's rotating three-wave panel (166 questions)[^gsspanel]; the American National Election Studies panels from 1956-60 (10 questions), 1972-1976 (71 questions), 1992-1997 (66 questions), and 2000-2004 (57 questions); and the Cooperative Congressional Election Study (36 questions). I also use data from the National Study of Youth and Religion (45 questions), two panels -- one of mothers, one of their children -- from the Intergenerational Study of Parents and Children (17 questions in the mother panel, 18 in the child panel), and the Longitudinal Study of Generations (58 questions). These data sources have distinct advantages when compared with each other. The GSS, ANES, and CCES panels are representative samples of U.S. adults over the age of 18. The NSYR is a nationally representative sample of young people, who are not included in the GSS panels, and includes questions about religious and moral issues that the adult panels lack. The LSG and ISPC are not a probability samples, so it is hard to make inferences about the larger population from these samples, but they include distinct sets of attitude items and allow for the analysis of some questions in different temporal or generational settings.
+
+[^gsspanel]: The GSS panels were collected over an eight year period as a series of three rotating three-wave panels. Each panel extended over a four-year period (2006-2008-2010; 2008-2010-2012; 2010-2012-2014). Because of the significant overlap in time periods, I treat the GSS panels as a single panel.
+
+The panels also cover different time intervals. The GSS, ANES, and CCES panels cover about four years. The ISPC panel covers 13 years. Other panels fall between these. In general, I suspect that stable opinions will be easier to hold over shorter time frames, so panels covering a longer time frame will see more vacillation and durable change.
+
+It is impossible to say whether the attitudes captured in the 544 questions analyzed here are "representative" of attitudes in general. Because of the nature of the surveys and the kinds of topics get covered in panel studies that extend at least three waves, political views make up a large proportion of questions in this analysis. However, the data sets -- particularly the GSS -- contain a broad array of questions on other topics including beliefs about race relations, gender roles, family structures, moral worldviews, inter-group relations, and social and institutional trust.
+
+# Results
+
+I apply the finite mixture model outlined above to these 544 questions. My discussion of the results proceeds in three sections. I first examine the overall distribution of the three response patterns across questions, drawing general conclusions about attitude stability and change across data sets and questions. Next, I use a multiple regression approach to evaluate the effects of question content and structure on rates of stability and change. Finally, using results from the 166 questions from the GSS, I examine the pairwise correlations of stability estimates to look for evidence of "issue publics," or sets of issues where stability tends to co-occur. I focus on the GSS because it includes the most questions touching on the widest variety of issues.
+
+## Overall Pattern Proportions
+
+As a first step in this analysis, Figure \@ref(fig:patterncomp) presents a series of boxplots, three for each data set, plotting the distribution of mean estimates for the proportion of durable changers, vacillating changers, and opinion holders for each question. The figure contains a lot of information, but it highlights some clear patterns across the data sources.
+
+```{r patterncomp, fig.cap='Mean proportion of respondents in each behavioral group, by question and data set. Posterior distribution estimated with 5 chains, 2500 iterations each, first 500 iterations of each chain discarded.', fig.align='center'}
+results_df %>% 
+  filter(param %in% c("pi1", "pi2", "pi3")) %>% 
+  mutate(param = recode(param, "pi1"="Stable Opinions", "pi2"="Vacillating Changers", 
+                        "pi3"="Durable Changers")) %>%
+  mutate(ds = recode(ds, "gss"="GSS (2006-2014)", "saf-m"="ISPC-Mom (1980-1993)",
+                     "saf-c"="ISPC-Child (1980-1993)", "lsg"="LSG (varies)", 
+                     "nsyr"="NSYR (varies)", "anes7276"="ANES (1972-1976)",
+                     "anes5660"="ANES (1956-1960)", "anes9297"="ANES (1992-1996)",
+                     "anes0004"="ANES (2000-2004)", "cces"="CCES (2010-2014)")) %>%
+  ggplot(aes(x = ds, y = mean, fill = ds)) + 
+  geom_hline(yintercept = .5, linetype = 2, color = "gray") +
+  geom_quasirandom(shape = 21, alpha = .3) + 
+  geom_boxplot(alpha = .1) + 
+  coord_flip() + 
+  expand_limits(y = c(0,1)) + 
+  theme_bw() + 
+  theme(legend.position = "none") + 
+  facet_wrap(~param) + 
+  labs(x = "", y = "Proportion of Respondents")
+```
+
+Starting at the left, the figure shows that durable change is rare across all data sets and almost all questions. For about half of all questions, the mean estimated proportion of respondents demonstrating durable change is less than 5 percent, with many of these questions showing rates statistically indistinguishable from 0.[^conservative] Only 17 percent of questions have mean rates of durable change above 10 percent. Attitudes that exhibit very high levels of attitude change typically pertain to major public events, and are exceptions that prove the rule that durable change is, in general, rare. 
+
+[^conservative]: Because of the conservative nature of the estimation process, the estimate for the proportion of durable changers can never be 0. But most of these questions have confidence intervals that extend below 1 percent. 
+
+Second, there is a range of ambivalence and stability across the data sets. Most of the data sets analyzed here include questions that demonstrate both high (greater than 70 percent) and low (less than 30 percent) levels of stability and vacillation. Since within-survey comparisons reflect the same sample, vacillation is not a feature of the population (the kinds of people being surveyed) but an interaction between people taking the survey and the kind of question being asked. In other words, there are some questions that most of the population can answer consistently over time, and there are questions where very few people in the population can answer consistently over time. However, most questions fall somewhere in the middle, with some people answering consistently and others not. 
+
+Third, vacillating change is on average more common than stability for the questions analyzed here. For 56 percent of the questions, more than half the sample demonstrated vacillating change. The 1956-60 ANES panel, which Converse analyzed to generate his original insights about non-attitudes, displays the highest average level of vacillation, but it is not an outlier. Almost all other surveys include questions that surpass that average in ambivalence. The GSS and the CCES are the only data sets where more questions show higher levels of stability than vacillation.
+
+There are other features of the results that should give us confidence that the finite mixture model approach separates distinct sets of opinion behavior and is not just partitioning respondents based on their positions on the scale. Figure \@ref(fig:strongcomp) plots the proportion of opinion holders and vacillating changes who give strong responses, conditional on them expressing an opinion (not saying "no opinion" or "neither agree nor disagree"), for questions with four, five, or seven response options. Because they lack "strong" responses, questions with two and three response options are excluded here. Points above the line suggest that people in the opinion holder group give "strong" responses at a higher rate than vacillating changers, conditional on giving an opinion.
+
+```{r strongcomp, fig.cap='Mean estimated proportion of "strong" responses in opinion holder and vacillating changer behavioral group. Posterior distribution estimated with 5 chains, 2500 iterations each, first 500 iterations of each chain discarded.', fig.align='center', fig.height=4, fig.width = 4}
+results_df %>%
+  left_join(qm, by = c("var"="var_name")) %>%
+  filter(param %in% c("delta1", "delta2")) %>%
+  select(param, mean, var, toptions, ds.x) %>%
+  spread(param, mean) %>%
+  ggplot(aes(x = delta2, y = delta1)) + 
+  geom_point(shape = 21, fill = "gray") + 
+  geom_abline(slope = 1) +
+  expand_limits(y = c(0, 1), x = c(0, 1)) + theme_minimal() + 
+  labs(x = "Pr(strong opinion | agree or disagree, vacillating changer)",
+       y = "Pr(strong opinion | agree or disagree, opinion holder)") 
+```
+
+For almost all questions with a "strongly agree" option, people with stable attitudes are more likely than people with vacillating attitudes to respond with that position, often much more likely. This suggests vacillating changers are generally expressing weaker opinions than opinion holders. At the same time, respondents who vacillate still select the "strong" option, often quite frequently suggests that they tend to have a larger response range than opinion holders. 
+
+If the measurement error model is correct, within-person standard deviations should be comparable across behavior groups. If standard deviations are not comparable, we have more confidence that these groups exhibit different opinion behaviors. Figure \@ref(fig:sdcomp) presents two sets of plots. The top row compares vacillating changers to durable changers, and the bottom row compared vacillating changers to opinion holders. Because questions with 2 or 3 response options will always have a within-person standard deviation of 0 for the opinion holders group, they are omitted from this comparison. Points above the line indicate questions where the vacillating changers have greater within-person variance than opinion holders.
+
+```{r sdcomp, fig.cap='Average within-person standard deviation, by behavioral group and question response options. Solid black line indicates equal within-group standard deviations. Dashed line indicates largest average within-person standard deviation for stable opinion holders. Posterior distribution estimated with 5 chains, 2500 iterations each, first 500 iterations of each chain discarded.', fig.align='center'}
+
+comp12 <- results_df %>%
+  left_join(qm, by = c("var"="var_name")) %>%
+  filter(param %in% c("sd_g1", "sd_g2")) %>%
+  filter(toptions > 3) %>%
+  mutate(toptions = paste("Answer choices = ", toptions, sep = "")) %>%
+  select(param, mean, var, toptions, ds.x) %>%
+  spread(param, mean) %>%
+  mutate(out = sd_g1) %>%
+  mutate(outcome = "Opinion holder avg. s.d.") %>% select(-sd_g1)
+
+comp23 <- results_df %>%
+  left_join(qm, by = c("var"="var_name")) %>%
+  filter(param %in% c("sd_g2", "sd_g3")) %>%
+  filter(toptions > 3) %>%
+    mutate(toptions = paste("Answer choices = ", toptions, sep = "")) %>%
+  select(param, mean, var, toptions, ds.x) %>%
+  spread(param, mean) %>%
+  mutate(out = sd_g3) %>%
+  mutate(outcome = "Durable changer avg. s.d.") %>% select(-sd_g3)
+
+lines <- data.frame(toptions = rep(c("Answer choices = 4", "Answer choices = 5",
+                                "Answer choices = 7"), 2),
+                    outcome = rep(c("Opinion holder avg. s.d.", "Durable changer avg. s.d."), each = 3),
+                    line = rep(c(0.422, 0.422, 0.682), 2)) 
+
+bind_rows(comp12, comp23) %>%
+  ggplot(aes(x = sd_g2, y = out)) + 
+  geom_vline(data = lines, aes(xintercept = line), linetype = 2) + 
+  geom_hline(data = lines, aes(yintercept = line), linetype = 2) + 
+  geom_point(shape = 21, fill = "gray") + 
+  geom_abline(slope = 1) + 
+  expand_limits(y = 0) + 
+  facet_grid(outcome~toptions, switch = "y", scales = "free_x") +
+  theme_bw() + 
+  labs(x = "Vacillating Changers: Average within-person S.D",
+       y = "") + 
+  theme(strip.placement = "outside",
+        strip.background = element_blank())
+```
+
+Consistent with the gay marriage example presented above, Figure \@ref(fig:sdcomp) shows that vacillating changers uniformly have higher within-person standard deviations for almost all questions with four or more response options, regardless of question structure, and almost uniformly lower within-person standard deviations than durable changers.[^not_durable] This suggests that durable changers are more likely to move from extreme ends of the scale, while vacillating changers are more likely to cluster in the middle of the scale (though with more variation than opinion holders). In other words, we can be fairly confident that the model is separating three different groups with distinct sets of behavior. Notable here is the fact that the pattern is consistent with most seven-point questions. On five-point questions, vacillating changers might have more room to move around and express their nuanced opinions (three positions: agree, neither agree nor disagree, and disagree) than opinion holders (strongly agree and agree). But even when opinion holders have room to give a wider range of responses, they still demonstrate uniformly less within-person variation than vacillating changers.
+
+[^not_durable]: The three questions where durable changes have lower average within-person standard deviation than vacillating changers ask respondents if if the government should bus students to ensure racial equality (72-76 ANES), whether the government should do more to improve the conditions of blacks (92-96 ANES), and whether they are happy with their bodies (NSYR).
+
+As an overall conclusion, we can say that the model is detecting three distinct sets of behavior, consistent with Converse's original black and white model, with the addition of a durable change group. Opinion holders tend to exhibit strong opinions at the ends of scales. Vacillating changers, rather than reflecting relatively settled views at scale midpoint, tend have a much wider range of responses that vacillate on either side of the issue. Durable changers tend to move between ends of the scale, often from one extreme to another. While we can say that overall, durable change is rare, there is a large variance in stability and vacillating change that remains to be explained. 
+
+## Issue Publics
+
+The preceding results suggest that, on any particular issue, some people seem to hold opinions while other people seem lack them. While this is strongly suggestive of an issue publics model, it does not rule out the probability that what drives stability resides at the individual level, and that questions simply vary in the degree to which people can stably answer them. To test whether these results are consistent with the "issue publics" theory, I explore the correlation of the pairwise probabilities of giving stable responses to questions, generated by the proportion of times that a respondent is classified in each group over the 10,000 iterations of the model. If stability is socially patterned, then people should be stable on related questions but not necessarily stable on unrelated questions. If a measurement error model is correct, then the probability of being stable on one question should not be related to their stability on any other questions. If stability is principally a function of individual cognitive ability or other individual feature, then pairwise correlations should be strong, as people who hold stable opinions do so across the board and other people fail to.
+
+The 166 questions in the General Social Survey panels examined here produce 13,695 pairwise correlations.[^consolidate] In general, pairwise correlations are very low, with an average correlation of .04, suggesting that stability in one attitude is not a strong predictor of stability in another attitude. This provides additional support for the argument that attitude stability is not principally a function of the person answering the question. At the same time, some pairwise correlations are quite strong. To better understand the distribution of these strong correlations, I plot them as a network diagram in Figure \ref{fig:stabgraph}. For parsimony, I focus on the 541 correlations greater than $\rho > .2$, about 2 percent of all correlations. Ties between issues indicate that people who are stable on one issue are stable on the other, and that people who vacillate on one issue vacillate on the other. 
+
+[^consolidate]: There are seven federal spending questions where different versions are tested for different people, examined separately above. The two versions show minimal differences, so I consolidate each pair into a single item for this analysis.
+
+```{r stabgraph, fig.cap='Network graph of pairwise correlations of co-occuring stability greater than .2. Probabilities generated from group assignments over 10,000 draws from posterior distribution.', fig.align='center', fig.height=9.5, fig.width = 6.5}
+load("~/Dropbox/hill_kreisi/results/ambivalence_everywhere_results/stabcors.Rdata")
+stab.cors[abs(stab.cors) < .2] <- 0
+stab.cors[abs(stab.cors) > .2] <- 1
+sc2 <- stab.cors[rowSums(stab.cors, na.rm = TRUE) > 1, colSums(stab.cors, na.rm = TRUE) > 1]
+stab.g <- graph_from_adjacency_matrix(sc2, mode = "undirected", 
+                                      diag = FALSE)
+par(mar=c(0,0,0,0)+.1)
+plot(stab.g, 
+     vertex.size = 11,
+     vertex.color = adjustcolor("gray", alpha.f = .5),
+     vertex.label.cex = .5,
+     vertex.label.color = "black",
+     layout=layout.fruchterman.reingold(stab.g))
+
+```
+
+Figure \ref{fig:stabgraph} reinforces the "issue public" nature of attitude stability, showing a series of spanning trees, with the occasional sense cluster of attitudes. It is important to keep in mind that the figure does not reflect the correlation of the underlying issues themselves, but rather the correlations of the probability of stability. First, 58 questions in the GSS do not demonstrate any substantial correlations with any other questions. This group includes a heterogeneous mix of questions about gun laws, whether there is an afterlife, whether premarital sex is acceptable, and more. However, closely related questions tend to demonstrate simultaneous stability. The largest component of the network is centered on a dense cluster of questions about civil liberties, but it spans out to questions of police use of force, abortion, and the values that should be demonstrated by children. At the same time, this component is totally disconnected from questions about political views. 
+
+Also notable in the figure are the lack of connections between certain issues. Despite having a similar structure and appearing next to each other in the survey, sets of questions about abortion are completely disconnected in the figure -- holding a stable belief about abortion in some circumstances (child defect, women's health, and rape) does not necessarily beget a stable position on other circumstances (single mother, as a method of birth control, if the mother is poor, and any circumstance the woman wants). The same is true of beliefs about suicide. Similarly, stability in general political beliefs (liberal-conservative ideology, partisan identification) is completely disconnected from a broad set of questions about government spending. Questions about general social trust are disconnected from specific questions about confidence in institutions, and questions about specific morality are disconnected from questions about general morality.
+
+## General Discussion of Results
+
+The results presented above suggest several general conclusions about the behavior of attitudes, at least the attitudes that tend to get measured in social science surveys. First, it is wrong to say that people, in general, do not hold durable opinions. On most issues, there is some proportion of the population that consistently locates itself on one side of an issue or another. Consistent with psychological research on opinions, when people hold opinions stably, they are disproportionately likely to say they hold this opinion strongly [@howe2017]. While simpler questions -- with fewer answer choices or less abstract wording -- seem easier for people to answer consistently over time, some proportion maintain stable attitudes even on complicated, abstract, and conceptual questions.
+
+At the same time, it is also wrong to say that people in general "have" opinions, as in common in latent attitude and measurement-error models. On any particular question there is typically a large group of people who do not maintain consistent opinions, vacillating between ends of the scale in ways that suggest they are subject to short-term considerations. Examination of the average within-person standard deviations for different groups suggest that people who vacillate are not just people at the middle of the scale who report with error; they vacillate more widely than people who hold stable opinions. These patterns are strongly consistent with Zaller's notion of ambivalence, that on any particular issue, "people are likely to internalize many contradictory arguments" and "form considerations that induce them both to favor and oppose the same issues" [-@zaller1992: p. 59]. This is true not just of politics, but general morality, religious beliefs, and more.
+
+A striking pattern in the results presented here is similarity of attitudes across topic domains. It is not the case that different kinds of attitudes behave differently. While there was a large range in the amount of stable opinions and vacillating change across questions, there were no questions analyzed here where all people demonstrated stability and no questions where all people demonstrated vacillating attitudes.[^selection] This suggests that the general mechanisms that produce attitude stability or vacillation are present across domains, but the specifics might vary widely. Similarly, most questions demonstrate low levels of durable change, with the exceptions reflecting high-profile events that are, by necessity, rare. It is not the case that people are forming and reforming attitudes that they carry with them over medium time frames. 
+
+[^selection]: It is plausible that such questions exist but make for bad survey questions. Survey questions tend to focus on areas where there are disagreement in the public. 
+
+In contrast to expectations, people are not inherently better at answering non-political questions than political questions, with the exception of questions about religious beliefs and sex. While questions about political issues do demonstrate high levels of ambivalence, they are not unique in that regard. People are similarly ambivalent about morality, civil liberties, race, gender, family structures, medicine, and more. In fact, when issues in other domains -- race, social trust, medicine, etc. -- interact with the political space, people seem more likely to report the same opinion consistently. This suggests, consistent with Zaller's model, that people get their cues about what to believe from opinion leaders, regardless of domain. 
+
+Across domains, specific attitudes tend to be more stable than general attitudes. People are much more likely to be consistent on specific moral prohibitions than on general questions about morality (whether morality is a personal matter, whether issues are black and white or contain shades of gray, whether morality should change with the times). They are more stable on specific questions about government spending on various priorities than on general questions about the role of government and political ideology. This suggests that people work inductively from specifics to general principles, and that they seem to have a hard time reconciling disparate specifics. They do not seem to apply general principles to specific outcomes. In the political domain, this is consistent with the notion that people are "ideologically innocent" [@kinder2017], and further argues against general or latent beliefs. This, combined with the fact that issues demonstrate greater stability when they intersect with the political realm, could also suggest that stability on issues is a function of what people hear, with specific issues more frequently discussed than general principles. 
+
+## Conclusions
+
+This paper sought to adjudicate a longstanding divide present in both cultural sociology and public opinion scholarship between theories suggesting that people lacked clear opinions and those suggesting that people held stable, real opinions. Going back to Converse's original formulation of the "black and white" model, I suggest that for any particular question, both were likely true: some people hold real, stable attitudes while other people lack stable attitudes altogether. Using a finite mixture model approach, I found that all questions could be divided into people who hold stable opinions, people who vacillate, and a small group of people who form an opinion or change their opinion during the course of the survey, with the vacillating group tending to outnumber opinion holders. This set of results is strongly consistent with Zaller's model of ambivalence, but also suggests that some people in the population do form stable, real opinions. 
+
+For cultural sociology, the results presented here reinforce notions that opinion stability is a function of social scaffolding -- institutions, context, and social networks. The large variation in stability across questions and the clustering of stability on related topics, suggest that features of the social environment facilitate attitude stability. Exactly what kinds of social scaffolding, and where in the life course their influence matters most, is unclear from these results. It could be the case that people with stable dispositions acquire these early in life, while people who do not acquire these early never do. It could also be the case that people who hold stable attitudes do so because they are embedded in social structures that facilitate them. Adjudicating the mechanisms that facilitate stability requires further work.
+
+The results have broad implications for theories of social change. Kiley and Vaisey [-@kiley2020; @vaisey2016] posited that people have relatively stable views by the time they reach adulthood, especially for the GSS questions they analyzed. This is reinforced here by the low proportions of people demonstrating durable change. The NSYR demonstrates the highest rate of durable change. Similarly, the child panel of the ISPC demonstrates much higher rates of durable change than the mother panel, and both panels contain the same questions, extend for the same duration, and are asked in the same years. 
+
+At the same time, their conclusion that people have settled dispositions is challenged by the high amount of vacillation in many questions. While we can say that large swaths of the population have settled dispositions about questions about sexual morality, religious beliefs, and some specific governmental policies, they lack consistent opinions on more general conceptual questions -- political ideology, general beliefs about the role of government, general morality, and abstractions about civil liberties. If people tend to be ambivalent, then it is possible for their attitudes to be influenced by a consolidation of elite opinion around a topic. However, so long as culture remains heterogeneous, it seems likely that large groups of the population will vacillate.
+
+These results have implications for methods involving attitudes. The high degree of inconsistency in opinions -- inconsistency that seemingly cannot be attributed to measurement error -- should caution researchers away from assuming that a cross-sectional measure of attitudes is a good proxy for a person's belief. For many questions, more than half a sample might be responding with a temporary attitude construct, while others report real attitudes that matter to them. Given this heterogeneity, we should not expect strong predictive ability for that attitude in general, but that tells us nothing about how it influences the people who truly hold that attitude. "Attitude effects" are going to be shaped by what proportion of the population really holds an attitude, the distribution of stable attitude holds in the population, and the actual effect of the attitude on behavior. At the same time, it is not clear how many respondents need to be making stable responses for an attitude to be a good predictor for behavior (a coarsened version of the question Vaisey [-@vaisey2009] used to predict behavior was only stable for about 27 percent of respondents). 
+
+Ultimately, these results suggest that researchers should devote attention to the social conditions that facilitate stable attitudes and dispositions, whether they are located in people's past or in their contemporary environment. While we know that political awareness tends to facilitate stability in political beliefs, we have no expectation that political awareness should facilitate stability beliefs about religion, morality, or more, but it does suggest that domain-specific awareness might predict domain-specific stability. Attention to the mechanisms that create attitudes can help researchers develop a better understanding of the role of culture in behavior.
+
+\newpage
+
+# References
+
+\singlespace
+\setlength{\parindent}{-0.2in}
+\setlength{\leftskip}{0.2in}
+\setlength{\parskip}{8pt}
+\noindent
+

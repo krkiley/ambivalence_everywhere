@@ -37,7 +37,6 @@ df <- lsg %>% select(OP166R6, OP166R7, OP166R8) %>%
          y2 = recode(y2, "1"=1, "2"=2, "3"=4, "4"=5, "9"=NA_real_),
          y3 = recode(y3, "1"=1, "2"=2, "3"=4, "4"=5, "9"=NA_real_)) %>%
   select(y1, y2, y3)
-
 relimptlsg_model <- fmm(waves= c("y1", "y2", "y3"),
                       data=df, cov_estimator="binom", iterations=1000,
                       n_chains=5, burn=500, var_name="relimptlsg",

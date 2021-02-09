@@ -23,6 +23,52 @@ fmm <- function(waves, covariates=NA, data, n_chains = 5, iterations = 2500,
 }
 
 
+patMat <- data.frame(y1 = c(1,2,3,4,5), y2 = c(1,2,3,4,5), 
+                               y3 = c(1,2,3,4,5), y4 = c(1,2,3,4,5)) %>%
+                      expand(y1, y2, y3, y4) %>%
+  mutate(Ai = ifelse(y1 %in% c(4,5), 1, 0),
+         Bi = ifelse(y1 %in% c(1,5), 1, 0) + ifelse(y2 %in% c(1,5), 1, 0) +
+           ifelse(y3 %in% c(1,5), 1, 0) + ifelse(y4 %in% c(1,5), 1, 0),
+         Ci = ifelse(y1 == 3, 1, 0) + ifelse(y2 == 3, 1, 0) +
+           ifelse(y3 == 3, 1, 0) + ifelse(y4 == 3, 1, 0),
+         Di = ifelse(y1 < 3 & y2 >= 3, 1, 0) +
+           ifelse(y1 > 3 & y2 <= 3, 1, 0) +
+           ifelse(y2 < 3 & y3 >= 3, 1, 0) +
+           ifelse(y2 > 3 & y3 <= 3, 1, 0) +
+           ifelse(y3 < 3 & y4 >= 3, 1, 0) +
+           ifelse(y3 > 3 & y4 <= 3, 1, 0) +
+           ifelse(y1 == 3 & y2 != 3, 1, 0) +
+           ifelse(y2 == 3 & y3 != 3, 1, 0) + 
+           ifelse(y3 == 3 & y4 != 3, 1, 0),
+         Ei = ifelse(Di != 1, 0, 
+                     ifelse((y1 < 3 & y2 >= 3) | 
+                              (y1 == 3 & y2 != 3) |
+                              (y1 > 3 & y2 <= 3), 1, 
+                            ifelse((y2 < 3 & y3 >= 3) | 
+                                     (y2 == 3 & y3 != 3) |
+                                     (y2 > 3 & y3 <= 3), 2, 3))),
+         Fi = ifelse(Di != 1 | (Ei == 1 & y1 %in% c(1,2,3)) |
+                       (Ei == 2 & y2 %in% c(1,2,3)) |
+                       (Ei == 3 & y3 %in% c(1,2,3)), 0, 1),
+         Hi = ifelse(Di == 1 & y1 == 3, 1, 0),
+         Mi = ifelse(Di == 1 & y4 %in% c(4,5), 1, 0),
+         Qi = ifelse(Di == 1 & y4 == 3, 1, 0),
+         Ri = ifelse(y1 %in% c(1,2), 1, 0) + ifelse(y2 %in% c(1,2), 1, 0) +
+           ifelse(y3 %in% c(1,2), 1, 0) + ifelse(y4 %in% c(1,2), 1, 0))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #Right now, it requires categorical variables to be coded as such.
 fourWaveFMM <- function(waves, covariates=NA, data, n_chains = 5, iterations = 2500, 
                     burn = 500, strong = TRUE, cov_estimator="multinom", var_name = NA) {
@@ -108,7 +154,7 @@ fourWaveFMM <- function(waves, covariates=NA, data, n_chains = 5, iterations = 2
       Bi = ifelse(Y_star[,1] %in% c(1,5), 1, 0) + ifelse(Y_star[,2] %in% c(1,5), 1, 0) +
         ifelse(Y_star[,3] %in% c(1,5), 1, 0) + ifelse(Y_star[,4] %in% c(1,5), 1, 0)
       Ci = ifelse(Y_star[,1] == 3, 1, 0) + ifelse(Y_star[,2] == 3, 1, 0) +
-        ifelse(Y_star[,3] == 3, 1, 0) + ifelse(Y_star[,3] == 3, 1, 0)
+        ifelse(Y_star[,3] == 3, 1, 0) + ifelse(Y_star[,4] == 3, 1, 0)
       Di = ifelse(Y_star[,1] < 3 & Y_star[,2] >= 3, 1, 0) +
         ifelse(Y_star[,1] > 3 & Y_star[,2] <= 3, 1, 0) +
         ifelse(Y_star[,2] < 3 & Y_star[,3] >= 3, 1, 0) +
@@ -117,37 +163,41 @@ fourWaveFMM <- function(waves, covariates=NA, data, n_chains = 5, iterations = 2
         ifelse(Y_star[,3] > 3 & Y_star[,4] <= 3, 1, 0) +
         ifelse(Y_star[,1] == 3 & Y_star[,2] != 3, 1, 0) +
         ifelse(Y_star[,2] == 3 & Y_star[,3] != 3, 1, 0) + 
-        ifelse(Y_star[,3] == 3 & Y_star[,4] != 3, 1, 0) ####### STOPPED HERE
+        ifelse(Y_star[,3] == 3 & Y_star[,4] != 3, 1, 0) 
       Ei = ifelse(Di != 1, 0, 
                   ifelse((Y_star[,1] < 3 & Y_star[,2] >= 3) | 
                            (Y_star[,1] == 3 & Y_star[,2] != 3) |
-                           (Y_star[,1] > 3 & Y_star[,2] <= 3), 1, 2))
+                           (Y_star[,1] > 3 & Y_star[,2] <= 3), 1, 
+                         ifelse((Y_star[,2] < 3 & Y_star[,3] >= 3) | 
+                                  (Y_star[,2] == 3 & Y_star[,3] != 3) |
+                                  (Y_star[,2] > 3 & Y_star[,3] <= 3), 2, 3)))
       Fi = ifelse(Di != 1 | (Ei == 1 & Y_star[,1] %in% c(1,2,3)) |
-                    (Ei == 2 & Y_star[,2] %in% c(1,2,3)), 0, 1)
+                    (Ei == 2 & Y_star[,2] %in% c(1,2,3)) |
+                    (Ei == 3 & Y_star[,3] %in% c(1,2,3)), 0, 1)
       Hi = ifelse(Di == 1 & Y_star[,1] == 3, 1, 0)
-      Mi = ifelse(Di == 1 & Y_star[,3] %in% c(4,5), 1, 0)
-      Qi = ifelse(Di == 1 & Y_star[,3] == 3, 1, 0)
+      Mi = ifelse(Di == 1 & Y_star[,4] %in% c(4,5), 1, 0)
+      Qi = ifelse(Di == 1 & Y_star[,4] == 3, 1, 0)
       Ri = ifelse(Y_star[,1] %in% c(1,2), 1, 0) + ifelse(Y_star[,2] %in% c(1,2), 1, 0) +
-        ifelse(Y_star[,3] %in% c(1,2), 1, 0) 
+        ifelse(Y_star[,3] %in% c(1,2), 1, 0) + ifelse(Y_star[,4] %in% c(1,2), 1, 0)
       
       #Do Groups Assignment based on randomly generated parameters
       #Estimate the probabilities of falling in group,
       #based on randomly generated parameters
-      p1=(alpha1^(1-Ai)*(1-alpha1)^Ai*(1-delta1)^(3-Bi)*delta1^Bi)*ifelse(Ci==0,1,0)*
+      p1=(alpha1^(1-Ai)*(1-alpha1)^Ai*(1-delta1)^(4-Bi)*delta1^Bi)*ifelse(Ci==0,1,0)*
         ifelse(Di==0,1,0)
-      p2=phi2^Ci*alpha2^Ri*(1-phi2-alpha2)^(3-Ci-Ri)*delta2^Bi*(1-delta2)^(3-Ci-Bi)
+      p2=phi2^Ci*alpha2^Ri*(1-phi2-alpha2)^(4-Ci-Ri)*delta2^Bi*(1-delta2)^(4-Ci-Bi)
       p3=(tau3^ifelse(Ei==1,1,0)*
-            (1-tau3)^ifelse(Ei==2,1,0)*
+            (((1-tau3)^ifelse(Ei%in%c(2,3),1,0))/2)*
             (phi3pre1^Hi*
                alpha3pre1^((1-Fi)*(1-Hi))*
                (1-alpha3pre1-phi3pre1)^Fi)^ifelse(Ei==1,1,0)*
             (phi3pre2^Hi*
                alpha3pre2^((1-Fi)*(1-Hi))*
-               (1-alpha3pre2-phi3pre2)^Fi)^ifelse(Ei==2,1,0)*
+               (1-alpha3pre2-phi3pre2)^Fi)^ifelse(Ei%in%c(2,3),1,0)*
             ((1-alpha3post)^Mi*
                (alpha3post)^(1-Mi))^Hi*
             delta3^Bi*
-            (1-delta3)^(3-Bi-Ci))*
+            (1-delta3)^(4-Bi-Ci))*
         ifelse(Di==1,1,0)*ifelse(Qi==0,1,0)
       
       
@@ -199,10 +249,10 @@ fourWaveFMM <- function(waves, covariates=NA, data, n_chains = 5, iterations = 2
                                     sum(Fi[g3==1&Ei==1])+(2/6)))
       phi3pre1=three_params_1[1]
       alpha3pre1=three_params_1[2]
-      three_params_2=rdirichlet(1,c(sum(Hi[g3==1&Ei==2])+(2/6),
-                                    sum(g3[Ei==2])-sum(Fi[g3==1&Ei==2])-
-                                      sum(Hi[g3==1&Ei==2])+(2/6),
-                                    sum(Fi[g3==1&Ei==2])+(2/6)))
+      three_params_2=rdirichlet(1,c(sum(Hi[g3==1&Ei%in%c(2,3)])+(2/6),
+                                    sum(g3[Ei%in%c(2,3)])-sum(Fi[g3==1&Ei%in%c(2,3)])-
+                                      sum(Hi[g3==1&Ei%in%c(2,3)])+(2/6),
+                                    sum(Fi[g3==1&Ei%in%c(2,3)])+(2/6)))
       phi3pre2=three_params_2[1]
       alpha3pre2=three_params_2[2]
       
@@ -210,7 +260,7 @@ fourWaveFMM <- function(waves, covariates=NA, data, n_chains = 5, iterations = 2
                        sum(Mi[g3==1&Hi==1]) + (2/6))
       delta3=rbeta(1,(sum(Bi[g3==1])/4) + (2/3),
                    sum(g3) - (sum(Ci[g3==1])/4) - (sum(Bi[g3==1])/4) + (2/3))
-      tau3=rbeta(1,sum(g3[Ei==1]) + 1,sum(g3[Ei==2]) + 1)
+      tau3=rbeta(1,sum(g3[Ei==1]) + 1,sum(g3[Ei%in%c(2,3)]) + 1)
       
       #Sample Gamma's from the multinomial regression output
       if (is.na(covariates)) {
@@ -244,9 +294,10 @@ fourWaveFMM <- function(waves, covariates=NA, data, n_chains = 5, iterations = 2
       #Re-estimate missing values (crazy logic)
       #print("drawing missing values")
       GY <- cbind(G, Y)
-      Y_star[Ymiss,] <- t(apply(GY[Ymiss,], 1, logicFive, alpha1, delta1, phi2, alpha2, delta2, 
-                                phi3pre1, phi3pre2, alpha3pre1, alpha3pre2, 
-                                alpha3post, delta3, tau3))
+      probDF <- genProbs(alpha1, delta1, phi2, alpha2, delta2, phi3pre1, 
+                          phi3pre2, alpha3pre1, alpha3pre2, alpha3post, 
+                          delta3, tau3)
+      Y_star[Ymiss,] <- t(apply(GY[Ymiss,], 1, drawProbs, probDF))
       
       #}, interval = .005)
       
@@ -324,6 +375,222 @@ fourWaveFMM <- function(waves, covariates=NA, data, n_chains = 5, iterations = 2
 
 
 
+
+genProbs <- function(alpha1, delta1, phi2, alpha2, delta2, 
+                     phi3pre1, phi3pre2, alpha3pre1, alpha3pre2, 
+                     alpha3post, delta3, tau3) {
+  
+  Ai=patMat$Ai
+  Bi=patMat$Bi
+  Ci=patMat$Ci
+  Di=patMat$Di
+  Ei=patMat$Ei
+  Fi=patMat$Fi
+  Hi=patMat$Hi
+  Mi=patMat$Mi
+  Qi=patMat$Qi
+  Ri=patMat$Ri
+  
+  p1=(alpha1^(1-Ai)*(1-alpha1)^Ai*(1-delta1)^(4-Bi)*delta1^Bi)*ifelse(Ci==0,1,0)*
+    ifelse(Di==0,1,0)
+  p2=phi2^Ci*alpha2^Ri*(1-phi2-alpha2)^(4-Ci-Ri)*delta2^Bi*(1-delta2)^(4-Ci-Bi)
+  p3=(tau3^ifelse(Ei==1,1,0)*
+        (((1-tau3)^ifelse(Ei%in%c(2,3),1,0))/2)*
+        (phi3pre1^Hi*
+           alpha3pre1^((1-Fi)*(1-Hi))*
+           (1-alpha3pre1-phi3pre1)^Fi)^ifelse(Ei==1,1,0)*
+        (phi3pre2^Hi*
+           alpha3pre2^((1-Fi)*(1-Hi))*
+           (1-alpha3pre2-phi3pre2)^Fi)^ifelse(Ei%in%c(2,3),1,0)*
+        ((1-alpha3post)^Mi*
+           (alpha3post)^(1-Mi))^Hi*
+        delta3^Bi*
+        (1-delta3)^(4-Bi-Ci))*
+    ifelse(Di==1,1,0)*ifelse(Qi==0,1,0)
+  
+  probs <- as.matrix(cbind(patMat[1:4], p1, p2, p3))
+  
+  return(probs)
+  
+}
+
+drawProbs <- function(vec, probMat) {
+  G <- as.numeric(vec[1])
+  vec <- as.numeric(vec[2:4])
+  pM1 <- probMat[if (!is.na(vec[1])) probMat[,1] == vec[1] else probMat[,1] %in% c(1,2,3,4,5),]
+  pM2 <- pM1[if (!is.na(vec[2])) pM1[,2] == vec[2] else pM1[,2] %in% c(1,2,3,4,5),]
+  pM3 <- pM2[if (!is.na(vec[3])) pM2[,3] == vec[3] else pM2[,3] %in% c(1,2,3,4,5),]
+  pM4 <- pM3[if (!is.na(vec[4])) pM3[,4] == vec[4] else pM3[,4] %in% c(1,2,3,4,5),]
+  
+  if (G == 1) {
+    new_vec <- pM4[sample(1:nrow(pM4), 1, prob = pM4[,5]), 1:4]
+  } else if (G == 2) {
+    new_vec <- pM4[sample(1:nrow(pM4), 1, prob = pM4[,6]), 1:4]
+  } else {
+    new_vec <- pM4[sample(1:nrow(pM4), 1, prob = pM4[,7]), 1:4]
+  }
+  
+  return(new_vec)
+  
+}
+
+
+
+
+
+#### Missing Data Logic
+
+logicFive <- function(vec, alpha1, delta1, phi2, alpha2, delta2, 
+                      phi3pre1, phi3pre2, alpha3pre1, alpha3pre2, 
+                      alpha3post, delta3, tau3) {
+  g <- vec[1]
+  y <- vec[2:5]
+  if (g==1) {
+    if (y[!is.na(y)][1] < 3) {
+      y[is.na(y)] <- sample(c(1,2), sum(is.na(y)), replace=T,
+                            prob=c(delta1, 1-delta1))
+    } else {
+      y[is.na(y)] <- sample(c(5,4), sum(is.na(y)), replace=T,
+                            prob=c(delta1, 1-delta1))
+    }
+  } else if (g==2) {
+    y[is.na(y)] <- 
+      sample(1:5, sum(is.na(y)), replace=T, 
+             prob=c(alpha2*delta2,alpha2*(1-delta2),phi2,
+                    (1-alpha2)*(1-delta2),(1-alpha2)*delta2))
+  } else if (g==3) {
+    if (sum(is.na(y)==c(0,0,0,1))==4) {
+      
+    }
+    
+    
+    
+    
+    
+    if (sum(is.na(y)==c(0,1,1))==3) {
+      if (rbinom(1,1,tau3)) {
+        if (y[1]==3) {
+          if (rbinom(1,1,alpha3post)) {
+            y[c(2,3)] <- sample(c(1,2),2,replace=T,prob=c(delta3,1-delta3))
+          } else {
+            y[c(2,3)] <- sample(c(5,4),2,replace=T,prob=c(delta3,1-delta3))
+          }
+        } else if (y[1] %in% c(1,2)) {
+          y[c(2,3)] <- sample(c(5,4),2,replace=T,prob=c(delta3,1-delta3))
+        } else {
+          y[c(2,3)] <- sample(c(1,2),2,replace=T,prob=c(delta3,1-delta3))
+        }
+      } else {
+        if (y[1]==3) {
+          y[c(2,3)] <- c(3,sample(c(1,2,4,5),1,
+                                  prob=c(alpha3post*delta3,alpha3post*(1-delta3),
+                                         (1-alpha3post)*(1-delta3),
+                                         (1-alpha3post)*delta3)))
+        } else if (y[1] %in% c(1,2)) {
+          y[c(2,3)] <- c(sample(c(1,2),1,prob = c(delta3,1-delta3)),
+                         sample(c(5,4),1,prob = c(delta3,1-delta3)))
+        } else {
+          y[c(2,3)] <- c(sample(c(5,4),1,prob = c(delta3,1-delta3)),
+                         sample(c(1,2),1,prob = c(delta3,1-delta3)))
+        }
+      }
+    } else if (sum(is.na(y)==c(0,0,1))==3) {
+      if (y[1]==3&y[2]==3) {
+        y[3] <- sample(c(1,2,4,5),1,
+                       prob=c(alpha3post*delta3,alpha3post*(1-delta3),
+                              (1-alpha3post)*(1-delta3),(1-alpha3post)*delta3))
+      } else if ((y[1]%in%c(1,2,3)&y[2]%in%c(4,5)) | 
+                 (y[1]%in%c(1,2)&y[2]%in%c(1,2))) {
+        y[3] <- sample(c(5,4),1,prob=c(delta3,1-delta3))
+      } else {
+        y[3] <- sample(c(1,2),1,prob=c(delta3,1-delta3))
+      } 
+    } else if (sum(is.na(y)==c(0,1,0))==3) {
+      if (rbinom(1,1,tau3)) {
+        if (y[3] %in% c(4,5)) {
+          y[2] <- sample(c(5,4),1,prob=c(delta3,1-delta3))
+        } else {
+          y[2] <- sample(c(1,2),1,prob=c(delta3,1-delta3))
+        }
+      } else {
+        if (y[1]==3) {
+          y[2] <- 3
+        } else if (y[3] %in% c(4,5)) {
+          y[2] <- sample(c(1,2),1,prob = c(delta3,1-delta3))
+        } else {
+          y[2] <- sample(c(4,5),1,prob = c(delta3,1-delta3))
+        }
+      }
+    } else if (sum(is.na(y)==c(1,0,1))==3) {
+      if (y[2]==3) {
+        y[1] <- 3
+        y[3] <- sample(c(1,2,4,5),1,
+                       prob = c(alpha3post*delta3,alpha3post*(1-delta3),
+                                (1-alpha3post)*(1-delta3),(1-alpha3post)*delta3))
+      } else {
+        if (rbinom(1,1,tau3)) {
+          if (y[2]%in%c(1,2)) {
+            y[c(1,3)] <- c(sample(c(3,4,5),1,prob=c(phi3pre1,(1-phi3pre1)*(1-delta3),
+                                                    (1-phi3pre1)*delta3)),
+                           sample(c(1,2),1,prob = c(delta3,1-delta3)))
+          } else {
+            y[c(1,3)] <- c(sample(c(3,2,1),1,prob=c(phi3pre1,(1-phi3pre1)*(1-delta3),
+                                                    (1-phi3pre1)*delta3)),
+                           sample(c(5,4),1,prob = c(delta3,1-delta3)))
+          }
+        } else {
+          if (y[2]%in%c(1,2)) {
+            y[c(1,3)] <- c(sample(c(1,2),1,prob = c(delta3,1-delta3)),
+                           sample(c(5,4),1,prob = c(delta3,1-delta3)))
+          } else {
+            y[c(1,3)] <- c(sample(c(5,4),1,prob = c(delta3,1-delta3)),
+                           sample(c(1,2),1,prob = c(delta3,1-delta3)))
+          }
+        }
+      }
+    } else if (sum(is.na(y)==c(1,0,0))==3) {
+      if (y[2]==3) {
+        y[1] <- 3
+      } else if (y[2] %in% c(1,2) & y[3] %in% c(1,2)) {
+        y[1] <- sample(c(3,4,5),1,
+                       prob=c(phi3pre1,(1-phi3pre1)*(1-delta3),(1-phi3pre1)*delta3))
+      } else if (y[2] %in% c(1,2) & y[3] %in% c(4,5)) {
+        y[1] <- sample(c(2,1),1,prob=c((1-delta3), delta3))
+      } else if (y[2] %in% c(4,5) & y[3] %in% c(1,2)) {
+        y[1] <- sample(c(4,5),1,prob=c((1-delta3), delta3))
+      } else if (y[2] %in% c(4,5) & y[3] %in% c(4,5)) {
+        y[1] <- 
+          sample(c(3,2,1),1,prob=c(phi3pre1,(1-phi3pre1)*(1-delta3),(1-phi3pre1)*delta3))
+      }
+    } else if (sum(is.na(y)==c(1,1,0))==3) {
+      if (rbinom(1,1,tau3)) {
+        if (y[3]%in%c(1,2)) {
+          y[1] <- sample(c(3,4,5),1,prob=c(phi3pre1,(1-phi3pre1)*(1-delta3),
+                                           (1-phi3pre1)*delta3))
+          y[2] <- sample(c(1,2),1,prob=c(delta3,1-delta3))
+        } else {
+          y[1] <- sample(c(3,2,1),1,prob=c(phi3pre1,(1-phi3pre1)*(1-delta3),
+                                           (1-phi3pre1)*delta3))
+          y[2] <- sample(c(5,4),1,prob=c(delta3,1-delta3))
+        }
+      } else {
+        if (rbinom(1,1,phi3pre2)) {
+          y[1] <- 3
+          y[2] <- 3
+        } else {
+          if (y[3]%in%c(1,2)) {
+            y[1] <- sample(c(5,4),1,prob=c(delta3,1-delta3))
+            y[2] <- sample(c(5,4),1,prob=c(delta3,1-delta3))
+          } else {
+            y[1] <- sample(c(1,2),1,prob=c(delta3,1-delta3))
+            y[2] <- sample(c(1,2),1,prob=c(delta3,1-delta3))
+          }
+        }
+      }
+    }
+  }
+  return(as.numeric(c(y[1], y[2], y[3])))
+}
 
 
 

@@ -517,8 +517,8 @@ pattern_plot <- function(fmm_object) {
   d %>%
     filter(param %!in% c("llike", "chain", "sd_g1", "sd_g2", "sd_g3")) %>%
     mutate(grp = ifelse(param %in% c("pi1", "pi2", "pi3"), "1. Group",
-                        ifelse(param %in% c("alpha1", "delta1", "gamma1"), "2. Class 1",
-                               ifelse(param %in% c("alpha2", "delta2", "phi2", "gamma2"), "3. Class 2",
+                        ifelse(param %in% c("alpha1", "delta1", "gamma1", "kappa1"), "2. Class 1",
+                               ifelse(param %in% c("alpha2", "delta2", "phi2", "gamma2", "kappa2"), "3. Class 2",
                                       "4. Class 3")
                         ))) %>%
     ggplot(aes(x = param, y = mean)) + 

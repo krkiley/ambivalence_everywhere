@@ -1,0 +1,26 @@
+---
+title: Ambivalence is Everywhere&#58; Quantifying Attitude Stability Across Topic Domains[^thanks]
+author:
+  - Kevin Kiley, Duke University[^kk]
+date: "2/8/2021"
+output: 
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    toc: false
+    number_sections: true
+bibliography: ["kileybib.bib"]
+header-includes:
+   - \usepackage{setspace}\doublespacing
+   - \setlength{\parindent}{4em}
+   - \setlength{\parskip}{0em}
+   - \usepackage[markers,nolists]{endfloat}
+
+mainfont: Minion Pro
+fontsize: 12pt
+abstract: A major debate in cultural sociology and the social sciences more broadly centers on whether people hold consistent attitudes over time or whether attitudes are temporary constructs. A middle ground suggests that stable opinions are a function of social structure and attention and that on any particular issue, some people hold stable attitudes and others do not. This paper formalizes three theoretical models of opinion behavior&#58; holding stable attitudes, making durable changes, and constructing new opinions each wave. It uses a finite mixture model to quantify the proportion of people who demonstrate these behaviors for more than 500 survey questions across 10 panel data sets. The results suggest wide variation across questions in the proportion of respondents who hold stable attitudes, with most subject areas demonstrating high levels of inconsistency. People demonstrate stability on related issues, suggesting that over-time instability in responses is not measurement error, but rather that the general public is divided into "issue publics" that have stable opinions on different issues. Rather than argue that people in general hold or lack opinions, the results suggest that stable opinions are socially contingent.
+---
+
+Word Count: 15,292
+
+[^thanks]: Thanks to Stephen Vaisey, Craig Rawlings, and Nicholas Restrepo Ochoa for feedback on early drafts. Thanks to Jennifer Hill for guidance on implementing the model and for providing additional resources. Thanks to Christopher Johnston for pointing me to the fininte mixture model approach.
+[^kk]: Ph.D. Candidate, Department of Sociology, Duke University, <kevin.kiley@duke.edu>.
