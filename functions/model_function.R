@@ -1,12 +1,15 @@
 
+#Preerequisite packages
 library(tidyverse)
 library(nnet)
 
+#Load other functions
 source("~/Dropbox/ambivalence_everywhere/functions/nostrong_model.R")
 source("~/Dropbox/ambivalence_everywhere/functions/seven_question_model.R")
 library(haven)
 library(gtools)
 
+#Overall function for three, five, and seven-point questions
 fmm <- function(waves, covariates=NA, data, id=NA, n_chains = 5, iterations = 2500, 
                 burn = 500, qtype = "5", cov_estimator="multinom", var_name = NA) {
   
@@ -31,12 +34,13 @@ fmm <- function(waves, covariates=NA, data, id=NA, n_chains = 5, iterations = 25
 fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations = 2500, 
                 burn = 500, strong = TRUE, cov_estimator="multinom", var_name = NA) {
   
+  #Assign an id to the data if it does not have one already.
   if (is.na(id)) {
     data$id <- 1:nrow(data)
     id <- "id"
   }
   
-  #Extract Y and covariates from the model
+  #Select and separate Y and covariates (if present) for the model
   if (is.na(covariates)) {
     Y=data %>% select(id, waves)
     names(Y) <- c("id", "y1", "y2", "y3")
@@ -57,9 +61,10 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
                                   colMeans(W), colMeans(W)))
   }
 
+  
   ID=Y[,1]
   Y=Y[,2:4]
-  Ymiss <- rowSums(is.na(Y))>0
+  Ymiss <- rowSums(is.na(Y))>0 #Missing data key
 
   count <- 0
   model_params <- vector(mode = "list", length = iterations*n_chains)
@@ -67,7 +72,7 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
   grp_predict <- vector(mode = "list", length = iterations*n_chains)
   for (chain in 1:n_chains) {
     #Randomly generate the parameters
-    #from their respective prior distributions
+    #from their respective parameter spaces
     #print("generating starting parameters")
     alpha1=rbeta(1,1,1)
     delta1=rbeta(1,1,1)
@@ -76,7 +81,7 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
     alpha3post=rbeta(1,1,1)
     delta3=rbeta(1,1,1)
     
-    #Draw a vector psi for covariates
+    #Draw a vector psi for covariates (if present)
     #From a multivariate normal distribution
     if (!is.na(covariates)) {
       psi=mvrnorm(1, rep(0, 2*(1 + length(covariates))), 
@@ -100,19 +105,17 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
     phi3pre2=three_params_2[1]
     alpha3pre2=three_params_2[2]
     
-    #Randomly fill in missing data
+    #Randomly fill in missing data on first iteration
     Y_star <- as.matrix(Y)
     Y_star[is.na(Y_star[,1]),1] <- sample(1:5, sum(is.na(Y_star[,1])), replace = TRUE)
     Y_star[is.na(Y_star[,2]),2] <- sample(1:5, sum(is.na(Y_star[,2])), replace = TRUE)
     Y_star[is.na(Y_star[,3]),3] <- sample(1:5, sum(is.na(Y_star[,3])), replace = TRUE)
     
-    
+    #Data augmentation algorithm
     for (j in 1:iterations) {
       count <- count + 1
       
-      #profvis({
-      
-      #Create parameter vectors
+      #Create variable vectors
       Ai = ifelse(Y_star[,1] %in% c(4,5), 1, 0)
       Bi = ifelse(Y_star[,1] %in% c(1,5), 1, 0) + ifelse(Y_star[,2] %in% c(1,5), 1, 0) +
         ifelse(Y_star[,3] %in% c(1,5), 1, 0)
@@ -136,9 +139,9 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
       Ri = ifelse(Y_star[,1] %in% c(1,2), 1, 0) + ifelse(Y_star[,2] %in% c(1,2), 1, 0) +
         ifelse(Y_star[,3] %in% c(1,2), 1, 0) 
 
-      #Do Groups Assignment based on randomly generated parameters
+      #Do Groups Assignment based on parameters
       #Estimate the probabilities of falling in group,
-      #based on randomly generated parameters
+      #based on parameters
       p1=(alpha1^(1-Ai)*(1-alpha1)^Ai*(1-delta1)^(3-Bi)*delta1^Bi)*ifelse(Ci==0,1,0)*
         ifelse(Di==0,1,0)
       p2=phi2^Ci*alpha2^Ri*(1-phi2-alpha2)^(3-Ci-Ri)*delta2^Bi*(1-delta2)^(3-Ci-Bi)
@@ -157,7 +160,7 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
         ifelse(Di==1,1,0)*ifelse(Qi==0,1,0)
       
       
-      #Estimate pi'is
+      #Estimate pi'is (if covariates)
       if (!is.na(covariates)) {
         s_21 <- as.matrix(cbind(1, W))%*%as.matrix(psi[1:(1+length(covariates))])
         s_23 <- as.matrix(cbind(1, W))%*%as.matrix(psi[((1+length(covariates))+1):length(psi)])
@@ -185,6 +188,7 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
       cumul.w <- g_x %*% upper.tri(diag(ncol(g_x)), diag = TRUE) / rowSums(g_x)
       G <- rowSums(x > cumul.w) + 1L
       
+      #Assign group based on draw
       g1=ifelse(G==1,1,0)
       g2=ifelse(G==2,1,0)
       g3=ifelse(G==3,1,0)
@@ -218,7 +222,8 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
                    sum(g3) - (sum(Ci[g3==1])/3) - (sum(Bi[g3==1])/3) + (2/3))
       tau3=rbeta(1,sum(g3[Ei==1]) + 1,sum(g3[Ei==2]) + 1)
       
-      #Sample Gamma's from the multinomial regression output
+      #Sample pis from the multinomial regression output (if covariates
+      # present)
       if (is.na(covariates)) {
         pis=rdirichlet(1,c(sum(g1)+2, sum(g2)+2, sum(g3)+2))
         pi1i=pis[1]
@@ -247,15 +252,14 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
         
       }
       
-      #Re-estimate missing values (crazy logic)
+      #Re-estimate missing values (function below)
       #print("drawing missing values")
       GY <- cbind(G, Y)
       Y_star[Ymiss,] <- t(apply(GY[Ymiss,], 1, logicFive, alpha1, delta1, phi2, alpha2, delta2, 
                                       phi3pre1, phi3pre2, alpha3pre1, alpha3pre2, 
                                       alpha3post, delta3, tau3))
-
-      #}, interval = .005)
-
+      
+      #Store coefficient estimates for covariates
       if (!is.na(covariates)) {
         model_params[[count]]=data.frame(names = c(paste(c("Intercept", covariates), 
                                                          "_21", sep = ""), 
@@ -264,7 +268,7 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
         
       }
       
-      #Calculate average within person variance:
+      #Calculate average within person standard deviation by group:
       sd <- sqrt(rowSums((Y_star - rowMeans(Y_star))^2)/2)
       sd_g1 = mean(sd[G == 1])
       sd_g2 = mean(sd[G == 2])
@@ -291,6 +295,8 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
     
     
   }
+  
+  #Summarize parameter estimates, store separately
   pattern_params=bind_rows(pattern_params)
   pattern_param_summary=pattern_params %>%
     filter(it > burn) %>% select(-c(it, chain)) %>%
@@ -300,6 +306,7 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
               q25=quantile(value, .025, na.rm = TRUE), 
               q975=quantile(value, .975, na.rm = TRUE))
   
+  #Summarize group assignments for each person
   suppressMessages({
     grp_predict=bind_cols(grp_predict)
     prob_1 = rowMeans(grp_predict==1)
@@ -312,9 +319,11 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
     }
   })
     
+  #Store basic model info
   model_info = list(var = var_name, qtype="Five", n_chains = n_chains, iterations = iterations, 
                     covariates = covariates, burn = burn, cov_estimator=cov_estimator)
   
+  #Generate list to return
   if (!is.na(covariates)) {
     model_params=bind_rows(model_params)
     model_param_summary=model_params %>%
