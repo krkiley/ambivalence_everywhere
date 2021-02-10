@@ -1,13 +1,14 @@
-anes <- read_dta("~/Dropbox/data/anes/anes9297/anes_mergedfile_1992to1997.dta") 
 
+# 1992-1996 ANES panel
+# Available here: https://electionstudies.org/data-center/1992-1997-merged-file/
+
+#local load
+# anes <- read_dta("~/Dropbox/data/anes/anes9297/anes_mergedfile_1992to1997.dta") 
+
+#Make my own ID variable
 anes <- anes %>%
   mutate(id = 1:nrow(anes))
 
-# trustgov	Trust Govt To Do What Is Right	M001534	M025174	M045149
-# govwaste	Govt Wastes Tax Money	M001535	M025175	M045150
-# govcrook	How Many In Govt Crooked	M001537	M025177	M045152
-# govatt	How Much Elections Make Govt Pay Attn	M001538	M025178	M045153
-# satdemo	Satisfaction With How US Democracy Works	M001651	M025179	M045154
 
 #Anes 92-96
 
@@ -254,10 +255,6 @@ eqroles_model <- fmm(waves= c("y1", "y2", "y3"), id="id",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="eqroles",
                       qtype="7")
-
-#################################################
-######## HERE 
-#################################################
 
 #liberal-conservative V923509	V940839	V961269
 df <- anes %>% select(V923509,V940839,V961269, id) %>%
@@ -1044,10 +1041,10 @@ anes90results <- list(govins_model, jobguar_model, servspend_model, govblks_mode
                       fssocsec9_model, incimm9_model, homomil9_model, homojob9_model, abortion9_model, #60
                       schpray9_model, relimpt9_model, viewbible9_model, crooked9_model, trustgov9_model, #65
                       wastetax9_model) #66
-save(anes90results, file = "~/Dropbox/hill_kreisi/results/anes90results.Rdata")
+#Save locally (for Kevin)
+# save(anes90results, file = "~/Dropbox/hill_kreisi/results/anes90results.Rdata")
 
-anes90results[[16]] <- eqroles_model
-
+#Clean up workspace
 rm(govins_model, jobguar_model, servspend_model, govblks_model, 
    affactanes9_model, eqop_model, toofar_model, 
    nochance_model, morechance_model, worryless_model, treateq_model,
@@ -1067,39 +1064,5 @@ rm(govins_model, jobguar_model, servspend_model, govblks_model,
    incimm9_model, homomil9_model, homojob9_model, abortion9_model,
    schpray9_model, relimpt9_model, viewbible9_model,
    crooked9_model, trustgov9_model, wastetax9_model, anes)
-
-
-a9res <- vector(mode = "list", length = length(anes90results))
-for (i in 1:length(anes90results)) {
-  var <- anes90results[[i]]$model_info$var
-  qtype <- anes90results[[i]]$model_info$qtype
-  a9res[[i]] <- anes90results[[i]]$pattern_param_summary %>%
-    mutate(var = var, qtype = qtype)
-  
-}
-
-
-a2kres <- vector(mode = "list", length = length(anes2kresults))
-for (i in 1:length(anes2kresults)) {
-  var <- anes2kresults[[i]]$model_info$var
-  qtype <- anes2kresults[[i]]$model_info$qtype
-  a2kres[[i]] <- anes2kresults[[i]]$pattern_param_summary %>%
-    mutate(var = var, qtype = qtype)
-  
-}
-
-
-bind_rows(bind_rows(a9res)) %>%
-  filter(param == "pi2") %>%
-  ggplot(aes(x = reorder(var, mean), y = mean, fill = as.factor(qtype))) + 
-  geom_linerange(aes(ymin = q25, ymax = q975)) + 
-  geom_point(shape = 21) + 
-  coord_flip() + 
-  labs(x = "", 
-       y = "Proportion", 
-       title = "Proportion of respondants with ambivalent/vascillating attitudes",
-       fill = "Response\nOptions") +
-  theme_bw() + 
-  expand_limits(y = c(0,1))
 
   

@@ -1,14 +1,22 @@
 
+#Panel surveys available at: https://www.icpsr.umich.edu/web/NACDA/studies/9902
 
+#This is the children data
 
+#Files are abbreviated "SAF" because I first encounted the study as
+# the "study of American families", and later learned the real name
 
+#Local load
 safc80 <- read_dta("~/Dropbox/data/saf/saf_child80.dta")
 safc85 <- read_dta("~/Dropbox/data/saf/saf_child85.dta")
 safc93 <- read_dta("~/Dropbox/data/saf/saf_child93.dta")
 
-
+#Combine data
 safc <- left_join(safc80, safc85, by = "FAMID62") %>%
   left_join(safc93, by = "FAMID62")
+
+source("~/ambivalence_everywhere/functions/model_function.R")
+
 
 df <- safc %>%
   select(V2633, V4323, V12030) %>%
@@ -22,7 +30,6 @@ cnolive_model <- fmm(waves= c("y1", "y2", "y3"),
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="cnolive",
                       qtype="5")
-
 
 
 df <- safc %>%
@@ -284,29 +291,7 @@ safc_results <- list(cnolive_model, cnosex_model, cnodiv_model, cmandec_model, c
                      cnohelp_model, chelphsbnd_model, cstayhome_model, cmarhap_model, cfewgd_model, #10 
                      cadvsngle_model, ccohabok_model, cpremarok_model, cdivbest_model, cokclub_model, #15
                      cmanearn_model, cmarbet_model, cwrkwarm_model) #18
-save(safc_results, file = "~/Dropbox/hill_kreisi/results/safcesults.Rdata")
 
-safc_results[[17]] <- cmarbet_model
+#Local save (for KK)
+# save(safc_results, file = "~/Dropbox/hill_kreisi/results/safcesults.Rdata")
 
-safcres <- vector(mode = "list", length = length(safc_results))
-for (i in 1:length(safc_results)) {
-  var <- safc_results[[i]]$model_info$var
-  qtype <- safc_results[[i]]$model_info$qtype
-  safcres[[i]] <- safc_results[[i]]$pattern_param_summary %>%
-    mutate(var = var, qtype = qtype)
-  
-}
-
-bind_rows(safcres) %>%
-  filter(param %in% c("pi2", "alpha1")) %>%
-  select(param, mean, var, qtype) %>%
-  spread(param, mean) %>%
-  ggplot(aes(x = pi2, y = alpha1, fill = qtype, label = var)) +
-  geom_point(shape = 21) + 
-  geom_text_repel() + 
-  geom_vline(xintercept = .6, linetype = 2) +
-  geom_hline(yintercept = .75, linetype = 2) +
-  geom_hline(yintercept = .25, linetype = 2) +
-  theme_bw() + 
-  labs(x = "Proportion of people with vascillating views",
-       y = "Agreement among stable view holders") 

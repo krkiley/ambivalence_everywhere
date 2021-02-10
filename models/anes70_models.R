@@ -1,147 +1,10 @@
-anes7 <- read_dta("~/Dropbox/data/anes/anes7276/anes_mergedfile_1972to1976.dta")
-
-info %>%
-  select(V720179, V720180, mcgnixtax1)
-
-#Generate political knowledge value
-info <- anes7 %>%
-  mutate(form = ifelse(V720003 %in% c(10, 11, 13), 1,
-                       ifelse(V720003 %in% c(20, 22, 24), 2, NA))) %>%
-  select(form, V720179, V720180, V720662, V720663, V720632, V720631,
-         V720207, V720206, V720614, V720615, V720173, V720174,
-         V720622, V720623, V720185, V720186, V720591, V720592, 
-         V720653, V720654, V720655, V720656, V720259, V720263,
-         V720500, V720943, V720944, V720949, V720950, V720951,
-         V720059, V720060, V720189, V720188, V720685, V720684,
-         V720945) %>%
-  zap_labels() %>%
-  mutate(V720179 = recode(V720179, "0"=NA_real_, "9"=NA_real_),
-         V720180 = recode(V720180, "0"=NA_real_, "9"=NA_real_),
-         V720662 = recode(V720662, "0"=NA_real_, "9"=NA_real_), 
-         V720663 = recode(V720663, "0"=NA_real_, "9"=NA_real_),
-         V720632 = recode(V720632, "0"=NA_real_, "9"=NA_real_),
-         V720631 = recode(V720631, "0"=NA_real_, "9"=NA_real_),
-         V720207 = recode(V720207, "0"=NA_real_, "9"=NA_real_),
-         V720206 = recode(V720206, "0"=NA_real_, "9"=NA_real_),
-         V720614 = recode(V720614, "0"=NA_real_, "9"=NA_real_),
-         V720615 = recode(V720615, "0"=NA_real_, "9"=NA_real_),
-         V720173 = recode(V720173, "0"=NA_real_, "9"=NA_real_),
-         V720174 = recode(V720174, "0"=NA_real_, "9"=NA_real_),
-         V720622 = recode(V720622, "0"=NA_real_, "9"=NA_real_),
-         V720623 = recode(V720623, "0"=NA_real_, "9"=NA_real_),
-         V720185 = recode(V720185, "0"=NA_real_, "9"=NA_real_),
-         V720186 = recode(V720186, "0"=NA_real_, "9"=NA_real_),
-         V720591 = recode(V720591, "0"=NA_real_, "9"=NA_real_),
-         V720592 = recode(V720592, "0"=NA_real_, "9"=NA_real_),
-         V720653 = recode(V720653, "0"=NA_real_, "9"=NA_real_),
-         V720654 = recode(V720654, "0"=NA_real_, "9"=NA_real_),
-         V720655 = recode(V720655, "0"=NA_real_, "9"=NA_real_),
-         V720656 = recode(V720656, "0"=NA_real_, "9"=NA_real_),
-         knowscoop = ifelse(V720259 == 99, NA_real_, 
-                          ifelse(V720259 == 98, 0, 1)),
-         knowmccl = ifelse(V720259 == 99, NA_real_, 
-                           ifelse(V720259 == 98, 0, 1)),
-         repscon = ifelse(V720500 %in% c(9,0), NA_real_, 
-                          ifelse(V720500 %in% c(2, 4), 1, 0)),
-         prezelect = ifelse(V720943 %in% c(99,0), NA,
-                            ifelse(V720943 == 2, 1, 0)),
-         senterms = ifelse(V720944 %in% c(99,0), NA,
-                           ifelse(V720944 == 6, 1, 0)),
-         repterms = ifelse(V720949 %in% c(99,0), NA,
-                           ifelse(V720949 == 2, 1, 0)),
-         cntrlpre = ifelse(V720950 %in% c(9,0), NA,
-                           ifelse(V720950 == 5, 1, 0)),
-         cntrlpost = ifelse(V720951 %in% c(9,0), NA,
-                            ifelse(V720951 == 5, 1, 0)),
-         cntrlpost = ifelse(V720951 %in% c(9,0), NA,
-                            ifelse(V720951 == 5, 1, 0)),
-         chinagov = ifelse(V720059 %in% c(9,0), NA, 
-                           ifelse(V720059 == 5, 1, 0)),
-         chinaun = ifelse(V720060 %in% c(9,0), NA,
-                          ifelse(V720060 == 1, 1, 0)),
-         V720189 = recode(V720189, "0"=NA_real_, "9"=NA_real_),
-         V720188 = recode(V720188, "0"=NA_real_, "9"=NA_real_),
-         V720685 = recode(V720685, "0"=NA_real_, "9"=NA_real_),
-         V720684 = recode(V720684, "0"=NA_real_, "9"=NA_real_),
-         knowcand = recode(V720945, "9"=NA_real_, "0"=NA_real_, "1"=1, "5"=0)) %>%
-  mutate(mcgnixtax1 = ifelse(is.na(V720179) | is.na(V720180), NA, 
-                            ifelse(V720179 > V720180 & V720179 != 8 & V720180 != 8, 1, 0)),
-         mcgnixtax2 = ifelse(is.na(V720662) | is.na(V720663), NA, 
-                             ifelse(V720662 > V720663 & V720662 != 8 & V720663 != 8, 1, 0)),
-         mcgwalmin = ifelse(is.na(V720632) | is.na(V720631), NA, 
-                            ifelse(V720632 > V720631 & V720632 != 8 & V720631 != 8, 1, 0)),
-         demrepbus = ifelse(is.na(V720207) | is.na(V720206), NA, 
-                            ifelse(V720207 > V720206 & V720207 != 8 & V720206 != 8, 1, 0)),
-         mcgnixjob1 = ifelse(is.na(V720614) | is.na(V720615), NA, 
-                             ifelse(V720614 > V720615 & V720614 != 8 & V720615 != 8, 1, 0)),
-         mcgnixjob2 = ifelse(is.na(V720173) | is.na(V720174), NA, 
-                             ifelse(V720173 > V720174 & V720173 != 8 & V720174 != 8, 1, 0)),
-         mcgnixacc = ifelse(is.na(V720622) | is.na(V720623), NA, 
-                            ifelse(V720622 > V720623 & V720622 != 8 & V720623 != 8, 1, 0)),
-         mcgnixnam1 = ifelse(is.na(V720185) | is.na(V720186), NA, 
-                            ifelse(V720185 > V720186 & V720185 != 8 & V720186 != 8, 1, 0)),
-         mcgnixnam2 = ifelse(is.na(V720591) | is.na(V720592), NA, 
-                             ifelse(V720591 > V720592 & V720591 != 8 & V720592 != 8, 1, 0)),
-         mcgnixlc = ifelse(is.na(V720653) | is.na(V720654), NA, 
-                             ifelse(V720653 > V720654 & V720653 != 8 & V720654 != 8, 1, 0)),
-         waldemlc = ifelse(is.na(V720655) | is.na(V720656), NA, 
-                           ifelse(V720655 > V720656 & V720655 != 8 & V720656 != 8, 1, 0)),
-         demrepnam = ifelse(is.na(V720189) | is.na(V720188), NA, 
-                           ifelse(V720189 > V720188 & V720189 != 8 & V720188 != 8, 1, 0)),
-         libconunr = ifelse(is.na(V720685) | is.na(V720684), NA, 
-                           ifelse(V720685 > V720684 & V720685 != 8 & V720684 != 8, 1, 0))) 
-  
-#form 1
-t <- info %>% 
-  select(form, mcgnixtax1, mcgnixtax2, mcgwalmin, demrepbus, mcgnixjob1, mcgnixjob2,
-         mcgnixacc, mcgnixnam1, mcgnixnam2, 
-         mcgnixlc, waldemlc, knowscoop, knowmccl, repscon, prezelect, 
-         senterms, repterms, cntrlpre, cntrlpost, knowcand,
-         chinagov, chinaun, demrepnam, libconunr) %>% 
-  mutate(mcgintax = ifelse(is.na(mcgnixtax1), mcgnixtax2, mcgnixtax1),
-         mcgnixjob = ifelse(is.na(mcgnixjob1), mcgnixjob2, mcgnixjob1),
-         mcgnixnam = ifelse(is.na(mcgnixnam1), mcgnixnam2, mcgnixnam1)) %>%
-  select(-c(mcgnixtax1, mcgnixtax2, mcgnixjob1, mcgnixjob2, mcgnixnam1, mcgnixnam2)) %>%
-  mutate(mcgwalmin = ifelse(is.na(mcgwalmin), mean(mcgwalmin, na.rm = TRUE), mcgwalmin),
-         demrepbus = ifelse(is.na(demrepbus), mean(demrepbus, na.rm = TRUE), demrepbus),
-         mcgnixacc = ifelse(is.na(mcgnixacc), mean(mcgnixacc, na.rm = TRUE), mcgnixacc),
-         mcgnixlc = ifelse(is.na(mcgnixlc), mean(mcgnixlc, na.rm = TRUE), mcgnixlc),
-         waldemlc = ifelse(is.na(waldemlc), mean(waldemlc, na.rm = TRUE), waldemlc),
-         knowscoop = ifelse(is.na(knowscoop), mean(knowscoop, na.rm = TRUE), knowscoop),
-         knowmccl = ifelse(is.na(knowmccl), mean(knowmccl, na.rm = TRUE), knowmccl),
-         repscon = ifelse(is.na(repscon), mean(repscon, na.rm = TRUE), repscon),
-         prezelect = ifelse(is.na(prezelect), mean(prezelect, na.rm = TRUE), prezelect),
-         senterms = ifelse(is.na(senterms), mean(senterms, na.rm = TRUE), senterms),
-         repterms = ifelse(is.na(repterms), mean(repterms, na.rm = TRUE), repterms),
-         cntrlpre = ifelse(is.na(cntrlpre), mean(cntrlpre, na.rm = TRUE), cntrlpre),
-         cntrlpost = ifelse(is.na(cntrlpost), mean(cntrlpost, na.rm = TRUE), cntrlpost),
-         knowcand = ifelse(is.na(knowcand), mean(knowcand, na.rm = TRUE), knowcand),
-         chinagov = ifelse(is.na(chinagov), mean(chinagov, na.rm = TRUE), chinagov),
-         chinaun = ifelse(is.na(chinaun), mean(chinaun, na.rm = TRUE), chinaun),
-         demrepnam = ifelse(is.na(demrepnam), mean(demrepnam, na.rm = TRUE), demrepnam),
-         libconunr = ifelse(is.na(libconunr), mean(libconunr, na.rm = TRUE), libconunr),
-         mcgintax = ifelse(is.na(mcgintax), mean(mcgintax, na.rm = TRUE), mcgintax),
-         mcgnixjob = ifelse(is.na(mcgnixjob), mean(mcgnixjob, na.rm = TRUE), mcgnixjob),
-         mcgnixnam = ifelse(is.na(mcgnixnam), mean(mcgnixnam, na.rm = TRUE), mcgnixnam)) %>%
-  mutate(scale1 = mcgintax + mcgwalmin + demrepbus + mcgnixjob + mcgnixacc + mcgnixnam + 
-           mcgnixlc + waldemlc + knowscoop + knowmccl + repscon + prezelect + 
-           senterms + repterms + cntrlpre + cntrlpost + knowcand,
-         scale2 = mcgintax + mcgwalmin + demrepbus + mcgnixjob + mcgnixacc + mcgnixnam + 
-           mcgnixlc + waldemlc + chinagov + chinaun + demrepnam + demrepnam + libconunr) %>%
-  group_by(form) %>%
-  mutate(scale1 = (scale1 - mean(scale1, na.rm = TRUE))/sd(scale1, na.rm = TRUE),
-         scale2 = (scale2 - mean(scale2, na.rm = TRUE))/sd(scale2, na.rm = TRUE)) %>%
-  mutate(know_scale = ifelse(form == 1, scale1, scale2))
-
-t %>%
-  ggplot(aes(x = know_scale, fill = as.factor(form))) +
-  geom_histogram()
 
 
-#Put it into the data set
-anes7$know_scale <- t$know_scale
-anes7$know_scale_sq <- t$know_scale^2
+#Anes 1972-1976 panel
+# Available at: https://electionstudies.org/data-center/1972-1976-merged-file/
 
+#local load (for Kevin)
+#anes7 <- read_dta("~/Dropbox/data/anes/anes7276/anes_mergedfile_1972to1976.dta")
 
 # Help minority scale	
 # 720629	742296	763264
@@ -465,10 +328,6 @@ interestvote7_model <- fmm(waves= c("y1", "y2", "y3"),
                         n_chains=5, burn=500, var_name="interestvote7",
                         qtype="3")
 
-# partyattn	
-# 720576	742235	763742
-
-
 # jobguardem	
 # 720176	742269	763244
 df <- anes7 %>% select(V720176,V742269,V763244) %>%
@@ -648,7 +507,6 @@ thermblkmil7_model <- fmm(waves= c("y1", "y2", "y3"),
                         data=df, cov_estimator="binom", iterations=2500,
                         n_chains=5, burn=500, var_name="thermblkmil7",
                         qtype="5")
-
 
 # thermcivrts	
 # 720729	742373	763843
@@ -1196,11 +1054,6 @@ partyid7_model <- fmm(waves= c("y1", "y2", "y3"),
                             n_chains=5, burn=500, var_name="partyid7",
                             qtype="7")
 
-
-############## ############## ############## 
-##############   START HERE   ############## 
-############## ############## ############## 
-
 # influnion	V720737	V742379	V763566
 df <- anes7 %>% select(V720737,V742379,V763566) %>%
   mutate(y1 = as.numeric(V720737), y2 = as.numeric(V742379),
@@ -1348,10 +1201,10 @@ anes70_results <- list(helpblk7_model, busing7_model, jobguar7_model, urbunrest7
                        influnion7_model, inflpoor7_model, inflbiz7_model, inflblks7_model, infllibs7_model, #65 
                        inflyoung7_model, inflwomen7_model, inflreps7_model, inflwelf7_model, inflold7_model, #70
                        infldems7_model) #71
-save(anes70_results,  file = "~/Dropbox/hill_kreisi/results/anes70_results.Rdata")
+#local save:
+#save(anes70_results,  file = "~/Dropbox/hill_kreisi/results/anes70_results.Rdata")
 
-anes70_results[[1]] <- helpblk7_model
-
+#removing models
 rm(helpblk7_model, busing7_model, jobguar7_model, urbunrest7_model, accused7_model,
    eqrole7_model, trust7_model, helpful7_model, takeadv7_model, runfew7_model,
    nosay7_model, votesay7_model, complicated7_model, wallacelibcon7_model,
@@ -1372,27 +1225,3 @@ rm(helpblk7_model, busing7_model, jobguar7_model, urbunrest7_model, accused7_mod
    influnion7_model, inflpoor7_model, inflbiz7_model, inflblks7_model,
    infllibs7_model, inflyoung7_model, inflwomen7_model, inflreps7_model,
    inflwelf7_model, inflold7_model, infldems7_model, anes7)
-
-                       
-a7res <- vector(mode = "list", length = length(anes70_results))
-for (i in 1:length(anes70_results)) {
-  var <- anes70_results[[i]]$model_info$var
-  qtype <- anes70_results[[i]]$model_info$qtype
-  a7res[[i]] <- anes70_results[[i]]$pattern_param_summary %>%
-    mutate(var = var, qtype = qtype)
-  
-}
-
-bind_rows(bind_rows(a7res)) %>%
-  filter(param == "pi2") %>%
-  ggplot(aes(x = reorder(var, mean), y = mean, fill = as.factor(qtype))) + 
-  geom_linerange(aes(ymin = q25, ymax = q975)) + 
-  geom_point(shape = 21) + 
-  coord_flip() + 
-  labs(x = "", 
-       y = "Proportion", 
-       title = "Proportion of respondants with ambivalent/vascillating attitudes",
-       fill = "Response\nOptions") +
-  theme_bw() + 
-  expand_limits(y = c(0,1))
-

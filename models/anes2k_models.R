@@ -3,7 +3,9 @@
 ################################################################################
 ################################################################################
 
-anes2k <- read_dta("~/Dropbox/data/anes/anes0004/anes_mergedfile_2000to2004.dta")
+#Panel is avaialble at: https://electionstudies.org/data-center/2000-2004-merged-file/
+
+# local load: anes2k <- read_dta("~/Dropbox/data/anes/anes0004/anes_mergedfile_2000to2004.dta")
 
 #better of stay home M000513a	M023033	M045143
 df <- anes2k %>% select(M000514,M023033,M045143) %>%
@@ -919,6 +921,6 @@ anes2kresults <- list(ushome_model, poliqual_model, poliinfo_model, votematter_m
                       fschild2k_model, fspoor2k_model, fsaid2k_model, fssocsec2k_model, fsblacks2k_model, #50
                       campfin2k_model, trustgov2k_model, wastetax2k_model, crooked2k_model, govatt2k_model, #55
                       satdemo2k_model, relimpt2k_model) #60
-save(anes2kresults, file = "~/Dropbox/hill_kreisi/results/anes2kresults.Rdata")
 
-anes2kresults[[40]] <- partyid2k_model
+#store
+# save(anes2kresults, file = "~/Dropbox/hill_kreisi/results/anes2kresults.Rdata")

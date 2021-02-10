@@ -1,19 +1,16 @@
+
+#All waves available at: https://www.thearda.com/Archive/NSYR.asp
+
+#local load:
 n1 <- read_dta("~/Dropbox/data/nsyr/nsyr1.DTA")
 n2 <- read_dta("~/Dropbox/data/nsyr/nsyr2.DTA")
 n3 <- read_dta("~/Dropbox/data/nsyr/nsyr3.DTA")
 n4 <- read_dta("~/Dropbox/data/nsyr/nsyr4.dta")
 
-# "given", "helped", , , , , ,
-# "onlyone", , "smoke", "drink", , 
-# "sharfath", "prayalon", "readbibl", 
-# "fight", "future", , , "health", 
+#source functions
+source("~/ambivalence_everywhere/functions/model_function.R")
 
-
-df %>%
-  filter(!is.na(y1) | !is.na(y2) | !is.na(y3))
-
-
-# control_model$pattern_param_summary %>% mutate(var = "control"),
+# control
 df <- full_join(n2 %>% mutate(y1 = control) %>% select(ids, y1),
                 n3 %>% mutate(y2 = control) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = control_w4) %>% select(ids, y3)) %>%
@@ -28,7 +25,7 @@ control_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                    n_chains=5, burn=500, var_name="control",
                    qtype="5")
 
-# lifeidl_model$pattern_param_summary %>% mutate(var = "lifeidl"),
+# lifeidl
 df <- full_join(n2 %>% mutate(y1 = lifeidl) %>% select(ids, y1),
                 n3 %>% mutate(y2 = lifeidl) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = lifeideal_w4) %>% select(ids, y3)) %>%
@@ -42,7 +39,8 @@ lifeidl_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                      data=df, cov_estimator="binom", iterations=2500,
                      n_chains=5, burn=500, var_name="lifeidl",
                      qtype="5")
-# lifeexcl_model$pattern_param_summary %>% mutate(var = "lifeexcl"),
+
+# lifeexcl
 df <- full_join(n2 %>% mutate(y1 = lifeexcl) %>% select(ids, y1),
                 n3 %>% mutate(y2 = lifeexcl) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = lifeexclent_w4) %>% select(ids, y3)) %>%
@@ -57,7 +55,7 @@ lifeexcl_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                      n_chains=5, burn=500, var_name="lifeexcl",
                      qtype="5")
 
-# solveprb_model$pattern_param_summary %>% mutate(var = "solveprb"),
+# solveprb
 df <- full_join(n2 %>% mutate(y1 = solveprb) %>% select(ids, y1),
                 n3 %>% mutate(y2 = solveprb) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = solveprob_w4) %>% select(ids, y3)) %>%
@@ -71,7 +69,8 @@ solveprb_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="solveprb",
                       qtype="5")
-# getwants_model$pattern_param_summary %>% mutate(var = "getwants"),
+
+# getwants
 df <- full_join(n2 %>% mutate(y1 = getwants) %>% select(ids, y1),
                 n3 %>% mutate(y2 = getwants) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = getwants_w4) %>% select(ids, y3)) %>%
@@ -85,7 +84,8 @@ getwants_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="getwants",
                       qtype="5")
-# change_model$pattern_param_summary %>% mutate(var = "change"),
+
+# change
 df <- full_join(n2 %>% mutate(y1 = change) %>% select(ids, y1),
                 n3 %>% mutate(y2 = change) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = change_w4) %>% select(ids, y3)) %>%
@@ -99,7 +99,8 @@ change_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="change",
                       qtype="5")
-# lifesat_model$pattern_param_summary %>% mutate(var = "lifesat"),
+
+# lifesat
 df <- full_join(n2 %>% mutate(y1 = lifesat) %>% select(ids, y1),
                 n3 %>% mutate(y2 = lifesat) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = lifesatis_w4) %>% select(ids, y3)) %>%
@@ -113,7 +114,8 @@ lifesat_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                     data=df, cov_estimator="binom", iterations=2500,
                     n_chains=5, burn=500, var_name="lifesat",
                     qtype="5")
-# menwrk_model$pattern_param_summary %>% mutate(var = "menwrk"),
+
+# menwrk
 df <- full_join(n2 %>% mutate(y1 = menwrk) %>% select(ids, y1),
                 n3 %>% mutate(y2 = menwrk) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = menwrkwmenhme_w4) %>% select(ids, y3)) %>%
@@ -127,7 +129,8 @@ menwrk_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                      data=df, cov_estimator="binom", iterations=2500,
                      n_chains=5, burn=500, var_name="menwrk",
                      qtype="5")
-# wommar_model$pattern_param_summary %>% mutate(var = "wommar"),
+
+# wommar
 df <- full_join(n2 %>% mutate(y1 = wommar) %>% select(ids, y1),
                 n3 %>% mutate(y2 = wommar) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = womenmar_w4) %>% select(ids, y3)) %>%
@@ -141,7 +144,8 @@ wommar_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                     data=df, cov_estimator="binom", iterations=2500,
                     n_chains=5, burn=500, var_name="wommar",
                     qtype="5")
-# manmar_model$pattern_param_summary %>% mutate(var = "manmar"),
+
+# manmar
 df <- full_join(n2 %>% mutate(y1 = manmar) %>% select(ids, y1),
                 n3 %>% mutate(y2 = manmar) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = manmar_w4) %>% select(ids, y3)) %>%
@@ -155,7 +159,8 @@ manmar_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                     data=df, cov_estimator="binom", iterations=2500,
                     n_chains=5, burn=500, var_name="manmar",
                     qtype="5")
-# mandecid_model$pattern_param_summary %>% mutate(var = "mandecid"),
+
+# mandecid
 df <- full_join(n2 %>% mutate(y1 = mandecid) %>% select(ids, y1),
                 n3 %>% mutate(y2 = mandecid) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = mandecide_w4) %>% select(ids, y3)) %>%
@@ -169,7 +174,8 @@ mandecid_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                     data=df, cov_estimator="binom", iterations=2500,
                     n_chains=5, burn=500, var_name="mandecid",
                     qtype="5")
-# wrkngmom_model$pattern_param_summary %>% mutate(var = "wrkngmom"),
+
+# wrkngmom
 df <- full_join(n2 %>% mutate(y1 = wrkngmom) %>% select(ids, y1),
                 n3 %>% mutate(y2 = wrkngmom) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = wrkngmom_w4) %>% select(ids, y3)) %>%
@@ -183,7 +189,8 @@ wrkngmom_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="wrkngmom",
                       qtype="5")
-# unmarsex_model$pattern_param_summary %>% mutate(var = "unmarsex"),
+
+# unmarsex
 df <- full_join(n2 %>% mutate(y1 = unmarsex) %>% select(ids, y1),
                 n3 %>% mutate(y2 = unmarsex) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = unmarsex_w4) %>% select(ids, y3)) %>%
@@ -197,7 +204,8 @@ unmarsex_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="unmarsex",
                       qtype="5")
-# moralrel_model$pattern_param_summary %>% mutate(var = "moralrel"),
+
+# moralrel
 df <- full_join(n2 %>% mutate(y1 = moralrel) %>% select(ids, y1),
                 n3 %>% mutate(y2 = moralrel) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = moralrel_w4) %>% select(ids, y3)) %>%
@@ -212,7 +220,7 @@ moralrel_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       n_chains=5, burn=500, var_name="moralrel",
                       qtype="5")
 
-# moralchg_model$pattern_param_summary %>% mutate(var = "moralchg"),
+# moralchg
 df <- full_join(n2 %>% mutate(y1 = moralchg) %>% select(ids, y1),
                 n3 %>% mutate(y2 = moralchg) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = moralitychnge_w4) %>% select(ids, y3)) %>%
@@ -227,7 +235,7 @@ moralchg_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       n_chains=5, burn=500, var_name="moralchg",
                       qtype="5")
 
-# brkmoral_model$pattern_param_summary %>% mutate(var = "brkmoral"),
+# brkmoral
 df <- full_join(n2 %>% mutate(y1 = brkmoral) %>% select(ids, y1),
                 n3 %>% mutate(y2 = brkmoral) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = brkmorality_w4) %>% select(ids, y3)) %>%
@@ -241,7 +249,8 @@ brkmoral_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="brkmoral",
                       qtype="5")
-# relprvte_model$pattern_param_summary %>% mutate(var = "relprvte"),
+
+# relprvte
 df <- full_join(n2 %>% mutate(y1 = relprvte) %>% select(ids, y1),
                 n3 %>% mutate(y2 = relprvte) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = relprvte_w4) %>% select(ids, y3)) %>%
@@ -255,7 +264,8 @@ relprvte_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="relprvte",
                       qtype="5")
-# helpless_model$pattern_param_summary %>% mutate(var = "helpless"),
+
+# helpless
 df <- full_join(n2 %>% mutate(y1 = helpless) %>% select(ids, y1),
                 n3 %>% mutate(y2 = helpless) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = helpless_w4) %>% select(ids, y3)) %>%
@@ -269,7 +279,8 @@ helpless_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="helpless",
                       qtype="5")
-# risks_model$pattern_param_summary %>% mutate(var = "risks")) %>%
+
+# risks
 df <- full_join(n2 %>% mutate(y1 = risks) %>% select(ids, y1),
                 n3 %>% mutate(y2 = risks) %>% select(ids, y2)) %>%
   full_join(n4 %>% mutate(y3 = risks_w4) %>% select(ids, y3)) %>%
@@ -283,7 +294,8 @@ risks_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="risks",
                       qtype="5")
-# prayansr_model$pattern_param_summary %>% mutate(var = "prayansr"),
+
+# prayansr
 df <- full_join(n1 %>% mutate(y1 = prayansr) %>% select(ids, y1),
                 n2 %>% mutate(y2 = prayansr) %>% select(ids, y2)) %>%
   full_join(n3 %>% mutate(y3 = prayansr) %>% select(ids, y3)) %>%
@@ -295,7 +307,8 @@ prayansr_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="prayansr",
                       qtype="3")
-# divrceok_model$pattern_param_summary %>% mutate(var = "divrceok"),
+
+# divrceok
 df <- full_join(n1 %>% mutate(y1 = divceok) %>% select(ids, y1),
                 n2 %>% mutate(y2 = divrceok) %>% select(ids, y2)) %>%
   full_join(n3 %>% mutate(y3 = divrceok) %>% select(ids, y3)) %>%
@@ -307,7 +320,8 @@ divrceok_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="divrceok",
                       qtype="3")
-# aftrlife_model$pattern_param_summary %>% mutate(var = "aftrlife"),
+
+# aftrlife
 df <- full_join(n1 %>% mutate(y1 = aftrlife) %>% select(ids, y1),
                 n2 %>% mutate(y2 = aftrlife) %>% select(ids, y2)) %>%
   full_join(n3 %>% mutate(y3 = aftrlife) %>% select(ids, y3)) %>%
@@ -319,7 +333,8 @@ aftrlife_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="aftrlife",
                       qtype="3")
-# angels_model$pattern_param_summary %>% mutate(var = "angels"),
+
+# angels
 df <- full_join(n1 %>% mutate(y1 = angels) %>% select(ids, y1),
                 n2 %>% mutate(y2 = angels) %>% select(ids, y2)) %>%
   full_join(n3 %>% mutate(y3 = angels) %>% select(ids, y3)) %>%
@@ -331,7 +346,8 @@ angels_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="angels",
                       qtype="3")
-# demons_model$pattern_param_summary %>% mutate(var = "demons"),
+
+# demons
 df <- full_join(n1 %>% mutate(y1 = demons) %>% select(ids, y1),
                 n2 %>% mutate(y2 = demons) %>% select(ids, y2)) %>%
   full_join(n3 %>% mutate(y3 = demons) %>% select(ids, y3)) %>%
@@ -343,7 +359,8 @@ demons_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                     data=df, cov_estimator="binom", iterations=2500,
                     n_chains=5, burn=500, var_name="demons",
                     qtype="3")
-# astrolgy_model$pattern_param_summary %>% mutate(var = "astrolgy"),
+
+# astrolgy
 df <- full_join(n1 %>% mutate(y1 = astrolgy) %>% select(ids, y1),
                 n2 %>% mutate(y2 = astrolgy) %>% select(ids, y2)) %>%
   full_join(n3 %>% mutate(y3 = astrolgy) %>% select(ids, y3)) %>%
@@ -355,7 +372,8 @@ astrolgy_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                     data=df, cov_estimator="binom", iterations=2500,
                     n_chains=5, burn=500, var_name="astrolgy",
                     qtype="3")
-# miracles_model$pattern_param_summary %>% mutate(var = "miracles"),
+
+# miracles
 df <- full_join(n1 %>% mutate(y1 = miracles) %>% select(ids, y1),
                 n2 %>% mutate(y2 = miracles) %>% select(ids, y2)) %>%
   full_join(n3 %>% mutate(y3 = miracles) %>% select(ids, y3)) %>%
@@ -367,7 +385,8 @@ miracles_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="miracles",
                       qtype="3")
-# reincar_model$pattern_param_summary %>% mutate(var = "reincar"),
+
+# reincar
 df <- full_join(n1 %>% mutate(y1 = reincar) %>% select(ids, y1),
                 n2 %>% mutate(y2 = reincar) %>% select(ids, y2)) %>%
   full_join(n3 %>% mutate(y3 = reincar) %>% select(ids, y3)) %>%
@@ -379,7 +398,8 @@ reincar_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="reincar",
                       qtype="3")
-# god_model$pattern_param_summary %>% mutate(var = "god"),
+
+# god
 df <- full_join(n1 %>% mutate(y1 = god) %>% select(ids, y1),
                 n2 %>% mutate(y2 = god) %>% select(ids, y2)) %>%
   full_join(n3 %>% mutate(y3 = god) %>% select(ids, y3)) %>%
@@ -391,7 +411,8 @@ god_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                      data=df, cov_estimator="binom", iterations=2500,
                      n_chains=5, burn=500, var_name="god",
                      qtype="3")
-# judgeday_model$pattern_param_summary %>% mutate(var = "judgeday"),
+
+# judgeday
 df <- full_join(n1 %>% mutate(y1 = judgeday) %>% select(ids, y1),
                 n2 %>% mutate(y2 = judgeday) %>% select(ids, y2)) %>%
   full_join(n3 %>% mutate(y3 = judgeday) %>% select(ids, y3)) %>%
@@ -405,7 +426,7 @@ judgeday_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                  n_chains=5, burn=500, var_name="judgeday",
                  qtype="3")
 
-# abstain1_model$pattern_param_summary %>% mutate(var = "abstain1")) %>%
+# abstain1
 df <- full_join(n1 %>% mutate(y1 = ABSTAIN1) %>% select(ids, y1),
                 n2 %>% mutate(y2 = ABSTAIN1) %>% select(ids, y2)) %>%
   full_join(n3 %>% mutate(y3 = ABSTAIN1) %>% select(ids, y3)) %>%
@@ -619,11 +640,6 @@ doubts1_model <- fmm(waves= c("y1", "y2", "y3"), id="ids",
                     n_chains=5, burn=500, var_name="doubts1",
                     qtype="3")
 
-
-
-
-
-
 nsyr_results <- list(control_model, lifeidl_model, lifeexcl_model, solveprb_model, getwants_model, #5
                      change_model, lifesat_model, menwrk_model, wommar_model, manmar_model, #10
                      mandecid_model, wrkngmom_model, unmarsex_model, moralrel_model, moralchg_model, #15 
@@ -633,10 +649,11 @@ nsyr_results <- list(control_model, lifeidl_model, lifeexcl_model, solveprb_mode
                      howdecid_model, spiritua_model, body_model, accepted_model, alienate_model, #35
                      invisibl_model, sad_model, congmust_model, godclose_model, okaypick_model, #40
                      viewrel_model, wrldorig_model, heaven_model, faith1_model, doubts1_model) #45
-save(nsyr_results, file = "~/Dropbox/hill_kreisi/results/nsyrresult.Rdata")
 
-nsyr_results[[37]] <- sad_model
+#local save (for KK)
+# save(nsyr_results, file = "~/Dropbox/hill_kreisi/results/nsyrresult.Rdata")
 
+#clean up
 rm(control_model, lifeidl_model, lifeexcl_model, solveprb_model,
    getwants_model, change_model, lifesat_model, menwrk_model, 
    wommar_model, manmar_model, mandecid_model, wrkngmom_model, 
@@ -650,25 +667,3 @@ rm(control_model, lifeidl_model, lifeexcl_model, solveprb_model,
    viewrel_model, wrldorig_model, heaven_model, faith1_model,
    doubts1_model, n1, n2, n3, n4)
 
-
-nsyrres <- vector(mode = "list", length = length(nsyr_results))
-for (i in 1:length(nsyr_results)) {
-  var <- nsyr_results[[i]]$model_info$var
-  qtype <- nsyr_results[[i]]$model_info$qtype
-  nsyrres[[i]] <- nsyr_results[[i]]$pattern_param_summary %>%
-    mutate(var = var, qtype = qtype)
-}
-
-
-bind_rows(nsyrres) %>%
-  filter(param == "pi2") %>%
-  ggplot(aes(x = reorder(var, mean), y = mean, fill = qtype)) + 
-  geom_linerange(aes(ymin = q25, ymax = q975)) + 
-  geom_point(shape = 21) + 
-  coord_flip() + 
-  labs(x = "", 
-       y = "Proportion", 
-       title = "Proportion of respondants with vascillating attitudes",
-       fill = "Response\nOptions") +
-  theme_bw() + 
-  expand_limits(y = c(0,1))

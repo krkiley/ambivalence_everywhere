@@ -1,8 +1,13 @@
+
+#GSS panels available at: https://gss.norc.org/get-the-data/stata
+
+#Local load (for KK)
 g6 <- read_dta("~/Dropbox/data/gss_data/gsspanels/gsspanel06.dta")
 g8 <- read_dta("~/Dropbox/data/gss_data/gsspanels/gsspanel08.dta") 
 g10 <- read_dta("~/Dropbox/data/gss_data/gsspanels/gsspanel10.dta")
 
-source("~/Dropbox/hill_kreisi/functions/model_function.R")
+#source function
+source("~/ambivalence_everywhere/functions/model_function.R")
 
 #TWO Choices
 # - Postlife (1:yes, 2:no)
@@ -22,7 +27,7 @@ postlife_model <- fmm(waves= c("y1", "y2", "y3"), id="id_1",
                      n_chains=5, burn=500, var_name="postlife",
                      qtype="3")
 
-# - relexper (1:yes; 2:no)????? #problem with recoding... lost labels
+# - relexper 
 df <- bind_rows(g6 %>% select(id_1, relexper_1, relexper_2, relexper_3) %>% 
                   mutate(id_1 = paste(id_1, "06", sep = "-")), 
                 g8 %>% select(id_1, relexper_1, relexper_2, relexper_3) %>% 
@@ -1676,14 +1681,6 @@ conarmy_model <- fmm(waves= c("y1", "y2", "y3"), id="id_1",
                     n_chains=5, burn=500, var_name="conarmy",
                     qtype="3")
 
-
-
-
-###########################################################
-###########################################################
-###########################################################
-###########################################################
-
 #natspac
 df <- bind_rows(g6 %>% select(id_1, natspac_1, natspac_2, natspac_3) %>% 
                   mutate(id_1 = paste(id_1, "06", sep = "-")), 
@@ -2823,10 +2820,6 @@ uswary_model <- fmm(waves= c("y1", "y2", "y3"), id="id_1",
                       n_chains=5, burn=500, var_name="uswary",
                       qtype="3")
 
-
-#######################################################################
-#######################################################################
-#######################################################################
 #astrosci
 df <- bind_rows(g6 %>% select(id_1, astrosci_1, astrosci_2, astrosci_3) %>% 
                   mutate(id_1 = paste(id_1, "06", sep = "-")), 
@@ -2963,11 +2956,6 @@ life_model <- fmm(waves= c("y1", "y2", "y3"), id="id_1",
                       n_chains=5, burn=500, var_name="life",
                       qtype="3")
 
-#finalter
-
-#finrela
-
-
 #Save results
 gss_results <- list(letdie1_model, suicide1_model, suicide2_model, suicide3_model, suicide4_model, #5
                     polescap_model, polhitok_model, polabuse_model, polmurdr_model, polattak_model, #10
@@ -3004,10 +2992,10 @@ gss_results <- list(letdie1_model, suicide1_model, suicide2_model, suicide3_mode
                    scibnfts_model, parsol_model, kidssol_model, courts_model, letin1_model, #165
                    life_model) #166
 
-save(gss_results, file = "~/Dropbox/hill_kreisi/results/gssresults.Rdata")
+#local save (for KK)
+#save(gss_results, file = "~/Dropbox/hill_kreisi/results/gssresults.Rdata")
 
-gss_results[[54]] <- teensex_model
-
+#clean up space
 rm(letdie1_model, suicide1_model, suicide2_model, suicide3_model, 
    suicide4_model, polescap_model, polhitok_model, polabuse_model,
    polmurdr_model, polattak_model, gunlaw_model, fear_model,
@@ -3049,32 +3037,4 @@ rm(letdie1_model, suicide1_model, suicide2_model, suicide3_model,
    advfront_model, uswary_model,
    astrosci_model, scibnfts_model, parsol_model, kidssol_model,
    courts_model, letin1_model, life_model, g6, g8, g10)
-
-gssres <- vector(mode = "list", length = length(gss_results))
-for (i in 1:length(gss_results)) {
-  var <- gss_results[[i]]$model_info$var
-  qtype <- gss_results[[i]]$model_info$qtype
-  gssres[[i]] <- gss_results[[i]]$pattern_param_summary %>%
-    mutate(var = var, qtype = qtype)
-}
-
-bind_rows(bind_rows(gssres)) %>%
-  filter(param == "pi2", qtype == "Five") %>%
-  ggplot(aes(x = reorder(var, mean), y = mean, fill = as.factor(qtype))) + 
-  geom_linerange(aes(ymin = q25, ymax = q975)) + 
-  geom_point(shape = 21) + 
-  coord_flip() + 
-  labs(x = "", 
-       y = "Proportion", 
-       title = "Proportion of respondants with ambivalent/vascillating attitudes",
-       fill = "Response\nOptions") +
-  theme_bw() + 
-  expand_limits(y = c(0,1))
-
-
-bind_rows(bind_rows(gssres)) %>%
-  filter(param %in% c("pi1", "pi2", "pi3")) %>%
-  ggplot(aes(x = mean, fill = param)) + 
-  geom_histogram(color = "black") + 
-  facet_wrap(~param)
 

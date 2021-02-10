@@ -1,12 +1,19 @@
 
 
+# Mother data from the Intergenerational study of parents and children
+# (See SAFC file for description of why I use SAF)
+
+#local load
 safm80 <- read_dta("~/Dropbox/data/saf/saf_mom80.dta")
 safm85 <- read_dta("~/Dropbox/data/saf/saf_mom85.dta")
 safm93 <- read_dta("~/Dropbox/data/saf/saf_mom93.dta")
 
-
+#combine data
 safm <- left_join(safm80, safm85, by = "FAMID62") %>%
   left_join(safm93, by = "FAMID62")
+
+#source functions
+source("~/ambivalence_everywhere/functions/model_function.R")
 
 
 df <- safm %>%
@@ -270,37 +277,11 @@ safm_results <- list(mnolive_model, mnosex_model, mnodiv_model, mmandec_model, m
                      mnohelp_model, mhelphsbnd_model, mwrkwarm_model, mmarhap_model, mfewgd_model, #10 
                      madvsngle_model, mcohabok_model, mpremarok_model, mdivbest_model, mokclub_model, #15
                      mmanearn_model, mmarbet_model) #17
-save(safm_results, file = "~/Dropbox/hill_kreisi/results/safmesults.Rdata")
+#local save (for KK)
+# save(safm_results, file = "~/Dropbox/hill_kreisi/results/safmesults.Rdata")
 
+#cleanup
 rm(mnolive_model, mnosex_model, mnodiv_model, mmandec_model, mmenswrk_model, #5
    mnohelp_model, mhelphsbnd_model, mwrkwarm_model, mmarhap_model, mfewgd_model, #10 
    madvsngle_model, mcohabok_model, mpremarok_model, mdivbest_model, mokclub_model, #15
    mmanearn_model, mmarbet_model)
-
-safm_results[[17]] <- mmarbet_model
-
-safmres <- vector(mode = "list", length = length(safm_results))
-for (i in 1:length(safm_results)) {
-  var <- safm_results[[i]]$model_info$var
-  qtype <- safm_results[[i]]$model_info$qtype
-  safmres[[i]] <- safm_results[[i]]$pattern_param_summary %>%
-    mutate(var = var, qtype = qtype)
-  
-}
-
-bind_rows(safmres) %>%
-  bind_rows(bind_rows(safcres)) %>%
-  filter(param %in% c("pi2", "alpha1")) %>%
-  select(param, mean, var, qtype) %>%
-  spread(param, mean) %>%
-  ggplot(aes(x = pi2, y = alpha1, fill = qtype, label = var)) +
-  geom_point(shape = 21) + 
-  geom_text_repel() + 
-  geom_vline(xintercept = .4, linetype = 2) +
-  geom_hline(yintercept = .75, linetype = 2) +
-  geom_hline(yintercept = .25, linetype = 2) +
-  theme_bw() + 
-  labs(x = "Proportion of people with vascillating views",
-       y = "Agreement among stable view holders") 
-
-

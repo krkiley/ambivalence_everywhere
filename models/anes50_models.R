@@ -1,30 +1,10 @@
 
 
+#1956-60 ANES Panel
+# Panel available: https://electionstudies.org/data-center/1956-1960-panel-study/
 
-#Load in data file
-anes5 <- read_dta("~/Dropbox/data/anes/anes5660/anes_mergedfile_1956to1960.dta") 
-
-anes5 <- anes5 %>% 
-  mutate(id = 1:nrow(anes5))
-
-
-#Knowledge
-know <- anes5 %>%
-  select(V560142, V560145, V580317, V580318, V580394, V580395, V600608, V600609,
-         V600611, V600612, V600613, V600615, V600798) %>%
-  zap_labels() %>%
-  mutate(V560142 = recode(V560142, "1"=0, "2"=0, "3"=0, "4"=1, "5"=1, "8"=0, "9"=NA_real_),
-         V560145 = recode(V560142, "1"=1, "2"=1, "3"=0, "4"=0, "5"=0, "8"=0, "9"=NA_real_),
-         V580317 = recode(V560142, "1"=1, "2"=0, "8"=0, "9"=NA_real_),
-         V580318 = recode(V560142, "1"=1, "2"=0, "8"=0, "9"=NA_real_),
-         V580394 = recode(V580394, "1"=0, "2"=1, "3"=2, "4"=2, "5"=2, "9"=NA_real_),
-         V580395 = recode(V580395, "1"=1, "2"=0, "3"=0, "4"=1, "5"=0, "8"=0, "9"=NA_real_),
-         V600608 = ifelse(V600608 == 71, 1, 0),
-         V600609 = ifelse(V600609 == 99, NA_real_,
-                          ifelse(V600609 >= 45 & V600609 <= 50, 1,
-                                 ifelse(V600609 == 14, 1, 0))),
-         V600611 = ifelse(V600611 %in% c()))
-
+#local load (for Kevin)
+# anes5 <- read_dta("~/Dropbox/data/anes/anes5660/anes_mergedfile_1956to1960.dta") 
 
 #negroes get fair treatment 		560044	580329	600628
 df <- anes5 %>% select(V560044,V580329,V600628, id) %>%
@@ -131,15 +111,6 @@ prvtpwr5_model <- fmm(waves= c("y1", "y2", "y3"),id="id",
                         n_chains=5, burn=500, var_name="prvtpwr5",
                         qtype="5")
 
-
-#democrats closer on getting job		560034	580322	600621
-#democrats closer on help poorer countries		560043	580328	600627
-#democrats more likely help negroes get fair treatment		560046	580330	600629
-#democrats closer on help schools		560055	580326	600625
-#democrats closer on keep soldiers overseas		560058	580331	600631
-#democrats closer on leave electricity to market		560061	580320	600619
-#democrats stay out of schools		560076	580336	600639
-
 #better off stayed home		560035	580323	600622
 df <- anes5 %>% select(V560035,V580323,V600622, id) %>%
   mutate(y1 = as.numeric(V560035), y2 = as.numeric(V580323),
@@ -187,24 +158,9 @@ partyid5_model <- fmm(waves= c("y1", "y2", "y3"),id="id",
                       qtype="7")
 
 
-#close to labor union		560245	580506	600719
-#interest in labor union		560246	580507	600720
-#close to negroes		560250	580514	600725
-#close to catholics		560254	580510	
-#interest in how catholics are doing		560255	580511	
 
 anes50_results <- list(helpblk5_model, integrate5_model, govjob5_model, poorcntry5_model,
                    bldschls5_model, fightcomm5_model, prvtpwr5_model, stayhome5_model, 
                    badluck5_model, partyid5_model)
 save(anes50_results,  file = "~/Dropbox/hill_kreisi/results/anes50_results.Rdata")
-
-
-a5res <- vector(mode = "list", length = length(anes50_results))
-for (i in 1:length(anes50_results)) {
-  var <- anes50_results[[i]]$model_info$var
-  qtype <- anes50_results[[i]]$model_info$qtype
-  a5res[[i]] <- anes50_results[[i]]$pattern_param_summary %>%
-    mutate(var = var, qtype = qtype, ds = "anes5660")
-  
-}
 

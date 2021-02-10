@@ -1,7 +1,12 @@
 #cces
 
-cces <- read_dta("~/Dropbox/data/cces/CCES_Panel_Full3waves_VV_V4.dta")
+# Available at: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi%3A10.7910/DVN/TOE8I1
 
+#local load:
+# cces <- read_dta("~/Dropbox/data/cces/CCES_Panel_Full3waves_VV_V4.dta")
+
+#Source functions
+source("~/ambivalence_everywhere/functions/model_function.R")
 
 
 # pid	Would you call yourself a strong Democrat or a not very strong Democrat?
@@ -89,72 +94,6 @@ afghmist_model <- fmm(waves= c("y1", "y2", "y3"),id="caseid",
                       n_chains=5, burn=500, var_name="afghmist",
                       qtype="3")
 
-# obamaapprove	Do you approve of the way each is doing their job...President Obama		
-# CC10 308a	CC12 308a	CC14 308a
-# df <- cces %>% select(CC10_308a,CC12_308a,CC14_308a,caseid) %>%
-#   mutate(y1 = as.numeric(CC10_308a), y2 = as.numeric(CC12_308a),
-#          y3 = as.numeric(CC14_308a)) %>%
-#   mutate(y1 = recode(y1, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_),
-#          y2 = recode(y2, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_),
-#          y3 = recode(y3, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_))
-# bhoapprovecc_model <- fmm(waves= c("y1", "y2", "y3"),id="caseid",
-#                       data=df, cov_estimator="binom", iterations=2500,
-#                       n_chains=5, burn=500, var_name="bhoapprovecc",
-#                       qtype="5")
-
-# 
-# congapprove	Do you approve of the way each is doing their job...the U.S. Congress		
-# CC10 308b	CC12 308b	CC14 308b
-# df <- cces %>% select(CC10_308b,CC12_308b,CC14_308b,caseid) %>%
-#   mutate(y1 = as.numeric(CC10_308b), y2 = as.numeric(CC12_308b),
-#          y3 = as.numeric(CC14_308b)) %>%
-#   mutate(y1 = recode(y1, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_),
-#          y2 = recode(y2, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_),
-#          y3 = recode(y3, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_))
-# congapprovecc_model <- fmm(waves= c("y1", "y2", "y3"),id="caseid",
-#                           data=df, cov_estimator="binom", iterations=2500,
-#                           n_chains=5, burn=500, var_name="congapprovecc",
-#                           qtype="5")
-# 
-# scapprove	Do you approve of the way each is doing their job...the U.S. Supreme Court		
-# CC10 308c	CC12 308c	CC14 308c
-# df <- cces %>% select(CC10_308c,CC12_308c,CC14_308c,caseid) %>%
-#   mutate(y1 = as.numeric(CC10_308c), y2 = as.numeric(CC12_308c),
-#          y3 = as.numeric(CC14_308c)) %>%
-#   mutate(y1 = recode(y1, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_),
-#          y2 = recode(y2, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_),
-#          y3 = recode(y3, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_))
-# scapprovecc_model <- fmm(waves= c("y1", "y2", "y3"),id="caseid",
-#                            data=df, cov_estimator="binom", iterations=2500,
-#                            n_chains=5, burn=500, var_name="scapprovecc",
-#                            qtype="5")
-# 
-# govapprove	Do you approve of the way each is doing their job...the Governor		
-# CC10 308d	CC12 308d	CC14 308d
-# df <- cces %>% select(CC10_308d,CC12_308d,CC14_308d,caseid) %>%
-#   mutate(y1 = as.numeric(CC10_308d), y2 = as.numeric(CC12_308d),
-#          y3 = as.numeric(CC14_308d)) %>%
-#   mutate(y1 = recode(y1, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_),
-#          y2 = recode(y2, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_),
-#          y3 = recode(y3, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_))
-# govapprovecc_model <- fmm(waves= c("y1", "y2", "y3"),id="caseid",
-#                            data=df, cov_estimator="binom", iterations=2500,
-#                            n_chains=5, burn=500, var_name="govapprovecc",
-#                            qtype="5")
-# 
-# approvestleg	Do you approve of the way each is doing their job...the State Legislature		
-# CC10 308e	CC12 308e	CC14 308e
-# df <- cces %>% select(CC10_308e,CC12_308e,CC14_308e,caseid) %>%
-#   mutate(y1 = as.numeric(CC10_308e), y2 = as.numeric(CC12_308e),
-#          y3 = as.numeric(CC14_308e)) %>%
-#   mutate(y1 = recode(y1, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_),
-#          y2 = recode(y2, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_),
-#          y3 = recode(y3, "1"=1, "2"=2, "3"=4, "4"=5, "5"=3, "8"=NA_real_, "9"=NA_real_))
-# stlegapprovecc_model <- fmm(waves= c("y1", "y2", "y3"),id="caseid",
-#                           data=df, cov_estimator="binom", iterations=2500,
-#                           n_chains=5, burn=500, var_name="stlegapprovecc",
-#                           qtype="5")
-# 
 # gunlaw	Should firearm laws be more strict, less strict or kept same		
 # CC10 320	CC12 320	CC14 320
 df <- cces %>% select(CC10_320,CC12_320,CC14_320,caseid) %>%
@@ -220,20 +159,6 @@ immquest_model <- fmm(waves= c("y1", "y2", "y3"),id="caseid",
                       data=df, cov_estimator="binom", iterations=2500,
                       n_chains=5, burn=500, var_name="immquest",
                       qtype="3")
-
-# immfine	Fine businesses that hire immigrants		
-# CC10 322 4	CC12 322 4	CC14 322 4
-# df <- cces %>% select(CC10_322_4,CC12_322_4,CC14_322_4) %>%
-#   mutate(y1 = as.numeric(CC10_322_4), y2 = as.numeric(CC12_322_4),
-#          y3 = as.numeric(CC14_322_4)) %>%
-#   mutate(y1 = recode(y1, "1"=2, "2"=4, "8"=NA_real_, "9"=NA_real_),
-#          y2 = recode(y2, "1"=2, "2"=4, "8"=NA_real_, "9"=NA_real_),
-#          y3 = recode(y3, "1"=2, "2"=4, "8"=NA_real_, "9"=NA_real_))
-# immfine_model <- fmm(waves= c("y1", "y2", "y3"),
-#                       data=df, cov_estimator="binom", iterations=2500,
-#                       n_chains=5, burn=500, var_name="immfine",
-#                       qtype="3")
-
 
 # abort	Abortion		  
 # CC10 324	CC12 324	CC14 324
@@ -670,14 +595,10 @@ cces_results <- list(pidcc_model, ideo5cc_model, brnagaincc_model, relimptcc_mod
                      statesalesincome_model, statetaxspend_model, wrkwayupcc_model, slvdiffcc_model, arra_model, #30
                      clnenrgy_model, aca_model, kagan_model, finrefrm_model, dadt_model, #35
                      stemcell_model) #36
-save(cces_results, file = "~/Dropbox/hill_kreisi/results/ccesresults.Rdata")
+#local save (for Kevin)
+#save(cces_results, file = "~/Dropbox/hill_kreisi/results/ccesresults.Rdata")
 
-cces_results[[12]] <- abort_model
-
-#teaideo
-#stlegapprove
-#demideo
-
+#clean up
 rm(pidcc_model, ideo5cc_model, brnagaincc_model,
    relimptcc_model, iraqmist_model, afghmist_model, 
    bhoapprovecc_model, congapprovecc_model, scapprovecc_model,
