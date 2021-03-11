@@ -56,7 +56,7 @@ fmmFive <- function(waves, covariates=NA, id=NA, data, n_chains = 5, iterations 
       filter(!is.na(y1) | !is.na(y2) | !is.na(y3)) %>%
       filter_at(vars(-y1, -y2, -y3), all_vars(!is.na(.)))
     
-    W=as.data.frame(Y[,4:ncol(Y)])
+    W=as.data.frame(Y[,5:ncol(Y)])
     W_add=as.data.frame(bind_rows(W, colMeans(W), colMeans(W), colMeans(W), colMeans(W),
                                   colMeans(W), colMeans(W)))
   }
